@@ -1,0 +1,189 @@
+@model List<Mangareading.Models.User>
+@{
+    ViewData["Title"] = "Quản Lý Người Dùng";
+    Layout = "_AdminLayout";
+}
+
+<div class="user-management-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Quản Lý Người Dùng</h1>
+            <p class="text-muted">Tổng số: @Model.Count người dùng</p>
+        </div>
+        <div class="search-box">
+            <input type="text" id="adminSearch" class="form-control" placeholder="Tìm kiếm người dùng...">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+    </div>
+
+    <div class="card data-table">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Danh Sách Người Dùng</h6>
+            <div class="d-flex align-items-center">
+                <div class="dropdown me-2">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-filter me-1"></i> Lọc
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                        <li><a class="dropdown-item active" href="#" data-filter="all">Tất cả người dùng</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="active">Người dùng kích hoạt</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="inactive">Người dùng bị chặn</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="recent">Đăng ký gần đây</a></li>
+                    </ul>
+                </div>
+                <button id="createRandomUsersBtn" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-user-plus me-1"></i> Tạo người dùng ngẫu nhiên
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            @if(Model.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên người dùng</th>
+                                <th>Email</th>
+                                <th>Ngày đăng ký</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model)
+                            {
+                                <tr>
+                                    <td>@user.UserId</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="@(string.IsNullOrEmpty(user.AvatarUrl) ? $"https://ui-avatars.com/api/?name={user.Username}&background=random&color=fff" : user.AvatarUrl)"
+                                                 alt="Avatar" width="32" height="32" class="rounded-circle me-2">
+                                            @user.Username
+                                        </div>
+                                    </td>
+                                    <td>@user.Email</td>
+                                    <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        @if (user.IsActive)
+                                        {
+                                            <span class="badge bg-success">Kích hoạt</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Bị chặn</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="/admin/users/@user.UserId" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-user-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- No Results Message -->
+                <div class="text-center py-5 no-results" style="display: none;">
+                    <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                    <h5>Không tìm thấy người dùng nào</h5>
+                    <p class="text-muted">Không có người dùng nào phù hợp với bộ lọc đã chọn.</p>
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Trước</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                    <h5>Không tìm thấy người dùng nào</h5>
+                    <p class="text-muted">Không có người dùng nào phù hợp với tiêu chí tìm kiếm.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tạo người dùng ngẫu nhiên -->
+<div class="modal fade" id="randomUserModal" tabindex="-1" role="dialog" aria-labelledby="randomUserModalTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="randomUserModalTitle">Tạo người dùng ngẫu nhiên</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-3">
+                    <label for="userCount">Số lượng người dùng:</label>
+                    <input type="number" class="form-control" id="userCount" value="1" min="1" max="10">
+                    <small class="form-text text-muted">Tối đa 10 người dùng mỗi lần</small>
+                </div>
+                <div class="alert alert-info">
+                    <small>
+                        <strong>Lưu ý:</strong> Hệ thống sẽ tự động tạo:
+                        <ul class="mb-0">
+                            <li>Tên người dùng: 3 ký tự ngẫu nhiên</li>
+                            <li>Mật khẩu: 3 ký tự ngẫu nhiên</li>
+                            <li>Email: định dạng username@example.com</li>
+                        </ul>
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirmCreateUsers">Tạo</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Xử lý sự kiện tạo người dùng ngẫu nhiên
+            const createRandomUsersBtn = document.getElementById('createRandomUsersBtn');
+            const confirmCreateUsers = document.getElementById('confirmCreateUsers');
+
+            createRandomUsersBtn.addEventListener('click', function() {
+                const randomUserModal = new bootstrap.Modal(document.getElementById('randomUserModal'));
+                randomUserModal.show();
+            });
+
+            confirmCreateUsers.addEventListener('click', function() {
+                const userCount = document.getElementById('userCount').value;
+
+                // Gửi request tạo người dùng ngẫu nhiên
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = '/admin/create-random-users';
+
+                const countInput = document.createElement('input');
+                countInput.type = 'hidden';
+                countInput.name = 'count';
+                countInput.value = userCount;
+
+                form.appendChild(countInput);
+                document.body.appendChild(form);
+                form.submit();
+            });
+        });
+    </script>
+}

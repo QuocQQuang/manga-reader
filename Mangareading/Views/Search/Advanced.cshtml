@@ -1,0 +1,330 @@
+@model List<Mangareading.Models.Genre>
+@{
+    ViewBag.Title = "Tìm kiếm nâng cao";
+}
+
+<div class="container">
+    <h2>Tìm kiếm nâng cao</h2>
+
+    <form action="@Url.Action("Results", "Search")" method="get" class="advanced-search-form" id="advancedSearchForm">
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <label for="query">Từ khóa</label>
+                <input type="text" name="query" id="query" class="form-control search-autocomplete" placeholder="Nhập tên truyện, tên thay thế, tác giả...">
+                <div id="autoCompleteResults" class="autocomplete-results"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <label>Thể loại (Tick: ✓ bắt buộc, X: loại trừ)</label>
+                <div class="genre-selection">
+                    @foreach (var genre in ViewBag.Genres)
+                    {
+                        <div class="genre-item" data-genre-id="@genre.GenreId">
+                            <span class="genre-name">@genre.GenreName</span>
+                            <span class="genre-status"></span>
+                            <input type="hidden" name="genreIds" class="include-genre" disabled value="@genre.GenreId">
+                            <input type="hidden" name="excludeGenreIds" class="exclude-genre" disabled value="@genre.GenreId">
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label for="status">Trạng thái</label>
+                <select name="status" id="status" class="form-control">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Ongoing">Đang tiến hành</option>
+                    <option value="Completed">Hoàn thành</option>
+                    <option value="Hiatus">Tạm ngưng</option>
+                    <option value="Canceled">Đã hủy</option>
+                </select>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label for="minChapters">Số chapter tối thiểu</label>
+                <input type="number" name="minChapters" id="minChapters" class="form-control" min="0" value="0">
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label for="publicationYear">Năm phát hành</label>
+                <select name="publicationYear" id="publicationYear" class="form-control">
+                    <option value="0">Tất cả</option>
+                    @for (int year = DateTime.Now.Year; year >= 1980; year--)
+                    {
+                        <option value="@year">@year</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label for="originalLanguage">Ngôn ngữ gốc</label>
+                <select name="originalLanguage" id="originalLanguage" class="form-control">
+                    <option value="">Tất cả</option>
+                    @foreach (var language in ViewBag.Languages)
+                    {
+                        <option value="@language">@language</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="lastUpdatedAfter">Cập nhật sau ngày</label>
+                <input type="date" name="lastUpdatedAfter" id="lastUpdatedAfter" class="form-control">
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label for="sortBy">Sắp xếp theo</label>
+                <select name="sortBy" id="sortBy" class="form-control">
+                    <option value="latest">Mới cập nhật</option>
+                    <option value="popularity">Phổ biến nhất</option>
+                    <option value="title">Tên truyện (A-Z)</option>
+                    <option value="oldest">Cũ nhất</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                <a href="@Url.Action("Index", "Search")" class="btn btn-outline-secondary">Quay lại tìm kiếm cơ bản</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Styles {
+    <style>
+        .advanced-search-form {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .advanced-search-form label {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .genre-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .genre-item {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            background-color: var(--bg-color-secondary);
+            color: var(--text-color);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            border: 1px solid var(--border-color);
+        }
+
+        .genre-item .genre-status {
+            margin-left: 5px;
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+            text-align: center;
+            line-height: 16px;
+            font-size: 12px;
+        }
+
+        .genre-item.include {
+            background-color: var(--success-color-light);
+            border: 1px solid var(--success-color);
+            color: var(--success-color-dark);
+        }
+
+        .genre-item.include .genre-status:after {
+            content: "✓";
+            color: var(--success-color);
+        }
+
+        .genre-item.exclude {
+            background-color: var(--danger-color-light);
+            border: 1px solid var(--danger-color);
+            color: var(--danger-color-dark);
+        }
+
+        .genre-item.exclude .genre-status:after {
+            content: "✕";
+            color: var(--danger-color);
+        }
+
+        /* Dark mode specific overrides */
+        [data-theme="dark"] .genre-item.include {
+            color: var(--success-color-light);
+        }
+
+        [data-theme="dark"] .genre-item.exclude {
+            color: var(--danger-color-light);
+        }
+
+        .autocomplete-results {
+            position: absolute;
+            background: var(--card-bg);
+            color: var(--text-color);
+            width: 100%;
+            z-index: 1000;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .autocomplete-results div {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .autocomplete-results div:hover {
+            background-color: var(--bg-color-hover);
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Genre selection logic
+            $('.genre-item').click(function() {
+                const $this = $(this);
+                const $includeInput = $this.find('.include-genre');
+                const $excludeInput = $this.find('.exclude-genre');
+
+                // Toggle through states: none -> include -> exclude -> none
+                if (!$this.hasClass('include') && !$this.hasClass('exclude')) {
+                    // Change to include state
+                    $this.addClass('include');
+                    $includeInput.prop('disabled', false);
+                    $excludeInput.prop('disabled', true);
+                } else if ($this.hasClass('include')) {
+                    // Change to exclude state
+                    $this.removeClass('include').addClass('exclude');
+                    $includeInput.prop('disabled', true);
+                    $excludeInput.prop('disabled', false);
+                } else {
+                    // Reset to neutral state
+                    $this.removeClass('exclude');
+                    $includeInput.prop('disabled', true);
+                    $excludeInput.prop('disabled', true);
+                }
+            });
+
+            // Autocomplete for search
+            let typingTimer;
+            const doneTypingInterval = 300; // ms
+
+            $('.search-autocomplete').on('input', function() {
+                const query = $(this).val();
+                clearTimeout(typingTimer);
+
+                if (query.length > 2) {
+                    typingTimer = setTimeout(function() {
+                        fetchAutocompleteResults(query);
+                    }, doneTypingInterval);
+                } else {
+                    $('#autoCompleteResults').hide();
+                }
+            });
+
+            function fetchAutocompleteResults(query) {
+                $.ajax({
+                    url: '@Url.Action("AutoComplete", "Search")',
+                    data: { term: query },
+                    success: function(data) {
+                        displayAutocompleteResults(data);
+                    }
+                });
+            }
+
+            function displayAutocompleteResults(results) {
+                const $results = $('#autoCompleteResults');
+                $results.empty();
+
+                if (results.length === 0) {
+                    $results.hide();
+                    return;
+                }
+
+                $.each(results, function(i, item) {
+                    const $div = $('<div>').text(item.value);
+                    $div.data('id', item.id);
+                    $div.click(function() {
+                        $('.search-autocomplete').val(item.value);
+                        $results.hide();
+                    });
+                    $results.append($div);
+                });
+
+                $results.show();
+            }
+
+            // Hide results when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.search-autocomplete, #autoCompleteResults').length) {
+                    $('#autoCompleteResults').hide();
+                }
+            });
+
+            // Add real-time search to layout search input
+            $('#layoutSearchInput').on('input', function() {
+                const query = $(this).val();
+                if (query.length > 2) {
+                    fetchLayoutSearchResults(query);
+                } else {
+                    $('#layoutSearchResults').hide();
+                }
+            });
+
+            function fetchLayoutSearchResults(query) {
+                $.ajax({
+                    url: '@Url.Action("AutoComplete", "Search")',
+                    data: { term: query },
+                    success: function(data) {
+                        displayLayoutSearchResults(data);
+                    }
+                });
+            }
+
+            function displayLayoutSearchResults(results) {
+                const $results = $('#layoutSearchResults');
+                $results.empty();
+
+                if (results.length === 0) {
+                    $results.hide();
+                    return;
+                }
+
+                $.each(results, function(i, item) {
+                    const $div = $('<div>').text(item.value);
+                    $div.data('id', item.id);
+                    $div.click(function() {
+                        window.location.href = '@Url.Action("Details", "Manga")/' + item.id;
+                    });
+                    $results.append($div);
+                });
+
+                $results.show();
+            }
+        });
+    </script>
+}

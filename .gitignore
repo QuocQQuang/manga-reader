@@ -1,0 +1,78 @@
+# Visual Studio files
+.vs/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+.vscode/
+*.vssscc
+*_i.c
+*_p.c
+*.ncb
+*.tlb
+*.tlh
+*.cache
+*.ilk
+*.log
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+.ionide/
+docs/
+*.md
+!README.md
+*.txt
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+publish/
+bin/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Database files
+*.mdf
+*.ldf
+*.ndf
+!Mangareading/SQL/*.bak
+
+appsettings.json
+appsettings.*.json
+!appsettings.Example.json
+
+# Certificates
+*.pfx
+*.pem
+*.p12
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+
+# Others
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+*.swp
+*.*~
+.DS_Store
+Thumbs.db

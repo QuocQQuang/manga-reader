@@ -1,0 +1,119 @@
+/**
+ * MangaDex CDN Handler CSS
+ * Styles to handle placeholder images for failed MangaDex CDN requests
+ */
+
+/* Placeholder styling for MangaDex failed images */
+.manga-image-error {
+    background-color: var(--bg-color-secondary, #2d3748);
+    border: 1px solid var(--border-color, #4a5568);
+    border-radius: var(--border-radius-sm, 4px);
+    object-fit: contain !important;
+    padding: 8px;
+    position: relative;
+}
+
+/* Thêm icon thông báo lỗi */
+.manga-image-error::before {
+    content: "\f071"; /* FontAwesome warning icon */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    color: var(--warning-color, #f59e0b);
+    opacity: 0.7;
+    z-index: 1;
+}
+
+/* Overlay text khi hover */
+.manga-image-error::after {
+    content: "Không tải được ảnh";
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+}
+
+.manga-image-error:hover::after {
+    opacity: 1;
+}
+
+/* Đặc biệt cho hình ảnh trong trang đọc */
+.page-container .manga-image-error {
+    min-height: 300px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-container .manga-image-error::after {
+    content: "Đang tải lại...";
+    opacity: 1;
+    bottom: auto;
+    top: 70%;
+}
+
+/* Animation cho việc thử lại */
+@keyframes retryPulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+.md-retrying {
+    animation: retryPulse 1.5s infinite ease-in-out;
+}
+
+/* Style cho hiển thị MD CDN URL */
+.manga-debug-info {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #00ff00;
+    font-family: monospace;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 80%;
+    max-height: 200px;
+    overflow: auto;
+    z-index: 9999;
+    font-size: 12px;
+    display: none;
+}
+
+.debug-mode .manga-debug-info {
+    display: block;
+}
+
+/* Nút debug */
+.manga-debug-toggle {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    z-index: 9999;
+    display: none;
+}
+
+body[data-env="Development"] .manga-debug-toggle {
+    display: block;
+}

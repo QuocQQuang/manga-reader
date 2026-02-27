@@ -1,0 +1,212 @@
+/* Import variables */
+@import 'variables.css';
+
+/* Manga card styling */
+.manga-card {
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: var(--card-bg);
+    height: 100%;
+}
+
+.manga-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px var(--shadow-color-darker), 0 4px 6px -2px var(--shadow-color);
+}
+
+.manga-cover {
+    height: 250px;
+    width: 100%;
+    object-fit: cover;
+}
+
+.manga-detail-cover {
+    border-radius: 1rem;
+    box-shadow: 0 10px 15px -3px var(--shadow-color-darker), 0 4px 6px -2px var(--shadow-color);
+    max-height: 400px;
+    object-fit: cover;
+}
+
+.manga-info {
+    padding: 1.5rem;
+    background-color: var(--card-bg);
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color);
+}
+
+.manga-title {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.manga-genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.manga-description {
+    margin-top: 1rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Manga chapters list */
+.chapter-list {
+    background-color: var(--card-bg);
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color);
+    overflow: hidden;
+}
+
+.chapter-list-header {
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chapter-list-header h3 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.chapter-list-content {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.chapter-item {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.chapter-item:last-child {
+    border-bottom: none;
+}
+
+.chapter-item:hover {
+    background-color: rgba(99, 102, 241, 0.05);
+}
+
+.chapter-item-title {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.chapter-item-meta {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.chapter-filter {
+    margin-bottom: 1rem;
+}
+
+.chapter-filter input {
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.chapter-filter input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
+}
+
+/* Manga status badge colors */
+.status-ongoing {
+    background-color: var(--info-color);
+}
+
+.status-completed {
+    background-color: var(--success-color);
+}
+
+.status-hiatus {
+    background-color: var(--warning-color);
+}
+
+.status-canceled {
+    background-color: var(--danger-color);
+}
+
+/* Manga grid */
+.manga-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Manga list view */
+.manga-list-item {
+    display: flex;
+    background-color: var(--card-bg);
+    border-radius: 1rem;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color);
+}
+
+.manga-list-cover {
+    width: 120px;
+    height: 180px;
+    object-fit: cover;
+}
+
+.manga-list-info {
+    padding: 1rem;
+    flex: 1;
+}
+
+.manga-list-title {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.manga-list-meta {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .manga-detail-cover {
+        max-height: 300px;
+        width: 100%;
+    }
+    
+    .manga-list-item {
+        flex-direction: column;
+    }
+    
+    .manga-list-cover {
+        width: 100%;
+        height: 200px;
+    }
+    
+    .manga-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+} 

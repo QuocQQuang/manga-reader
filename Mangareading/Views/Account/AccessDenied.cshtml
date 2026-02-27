@@ -1,0 +1,15 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Không có quyền truy cập";
+
+    ViewBag.StatusCode = 403;
+    ViewBag.ErrorTitle = "403 - Không có quyền truy cập";
+    ViewBag.ErrorIcon = "fas fa-ban";
+    ViewBag.ErrorMessage = "Bạn không có quyền truy cập trang này!";
+    ViewBag.ErrorDescription = "Tài khoản của bạn không có đủ quyền để truy cập trang này. Vui lòng liên hệ quản trị viên nếu bạn cần hỗ trợ.";
+    ViewBag.ErrorImage = "/images/403.svg";
+    ViewBag.ErrorClass = "error-403";
+    ViewBag.AlertType = "danger";
+}
+
+@await Html.PartialAsync("~/Views/Shared/_ErrorLayout.cshtml", Model ?? new ErrorViewModel { StatusCode = 403 })

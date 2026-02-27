@@ -1,0 +1,676 @@
+﻿@{
+    ViewData["Title"] = "Bảng Điều Khiển";
+    Layout = "_AdminLayout";
+}
+
+<div class="dashboard-container">
+    <div class="mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Bảng Điều Khiển</h1>
+        <p class="text-muted">Tổng quan hệ thống Manga Reader</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-primary h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng Người Dùng</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalUsers</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-success h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Tổng Truyện</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalManga</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-info h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Tổng Chapter</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalChapters</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-warning h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Tổng Lượt Xem</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalViews</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-eye fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts & Tables Row -->
+    <div class="row">
+        <!-- Growth Chart -->
+        <div class="col-lg-8 mb-4">
+            <div class="card chart-container">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Thống Kê Lượt Xem</h6>
+                    <div class="dropdown no-arrow">
+                        <button class="btn btn-link btn-sm dropdown-toggle" type="button" id="viewsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="viewsDropdown">
+                            <a class="dropdown-item period-selector" href="javascript:void(0);" data-period="week">Tuần này</a>
+                            <a class="dropdown-item period-selector" href="javascript:void(0);" data-period="month">Tháng này</a>
+                            <a class="dropdown-item period-selector" href="javascript:void(0);" data-period="year">Năm nay</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="mangaViewsChart" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Genres Distribution Chart -->
+        <div class="col-lg-4 mb-4">
+            <div class="card chart-container">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Phân Bố Thể Loại</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="genreDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Recent Manga Table -->
+        <div class="col-lg-6 mb-4">
+            <div class="card data-table">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content giữa">
+                    <h6 class="m-0 font-weight-bold text-primary">Truyện Mới Cập Nhật</h6>
+                    <a href="/admin/manga" class="btn btn-sm btn-primary">Xem tất cả</a>
+                </div>
+                <div class="card-body">
+                    @if(ViewBag.RecentManga != null && ViewBag.RecentManga.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Tên Truyện</th>
+                                        <th>Cập Nhật</th>
+                                        <th>Lượt Xem</th>
+                                        <th>Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var manga in ViewBag.RecentManga)
+                                    {
+                                        <tr>
+                                            <td>@manga.Title</td>
+                                            <td>@manga.UpdatedAt.ToString("dd/MM/yyyy")</td>
+                                            <td>@manga.ViewCount</td>
+                                            <td>
+                                                <a href="/admin/manga/@manga.MangaId" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Không có dữ liệu.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Users Table -->
+        <div class="col-lg-6 mb-4">
+            <div class="card data-table">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Người Dùng Mới</h6>
+                    <a href="/admin/users" class="btn btn-sm btn-primary">Xem tất cả</a>
+                </div>
+                <div class="card-body">
+                    @if(ViewBag.RecentUsers != null && ViewBag.RecentUsers.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Tên</th>
+                                        <th>Đăng Ký</th>
+                                        <th>Email</th>
+                                        <th>Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in ViewBag.RecentUsers)
+                                    {
+                                        <tr>
+                                            <td>@user.Username</td>
+                                            <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                            <td>@user.Email</td>
+                                            <td>
+                                                <a href="/admin/users/@user.UserId" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-user-edit"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Không có dữ liệu.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thao Tác Nhanh</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <a href="/admin/sync-services" class="btn btn-success btn-block py-3">
+                                <i class="fas fa-plus-circle me-2"></i> Đồng Bộ Truyện Mới
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="/admin/statistics" class="btn btn-info btn-block py-3">
+                                <i class="fas fa-chart-line me-2"></i> Báo Cáo Thống Kê
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="/admin/settings" class="btn btn-warning btn-block py-3">
+                                <i class="fas fa-cogs me-2"></i> Cài Đặt Hệ Thống
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Logs -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="card">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Nhật Ký Hệ Thống</h6>
+                    <div class="dropdown no-arrow">
+                        <button class="btn btn-link btn-sm dropdown-toggle" type="button" id="logsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="logsDropdown">
+                            <a class="dropdown-item log-filter active" href="javascript:void(0);" data-type="all">Tất cả</a>
+                            <a class="dropdown-item log-filter" href="javascript:void(0);" data-type="info">Thông tin</a>
+                            <a class="dropdown-item log-filter" href="javascript:void(0);" data-type="warning">Cảnh báo</a>
+                            <a class="dropdown-item log-filter" href="javascript:void(0);" data-type="error">Lỗi</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="logs-container p-2" style="max-height: 300px; overflow-y: auto;">
+                        <div class="text-center py-5" id="logsLoading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                            <p class="mt-2">Đang tải nhật ký hệ thống...</p>
+                        </div>
+                        <div id="logsContent" style="display: none;">
+                            <!-- Log content will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Khởi tạo dữ liệu mặc định cho chart
+            let currentPeriod = 'month';
+            let viewsChart;
+            let genreChart;
+            let currentLogFilter = 'all';
+
+            // Tải dữ liệu thống kê lượt xem ban đầu (mặc định là tháng)
+            loadViewsData(currentPeriod);
+            
+            // Tải dữ liệu phân bố thể loại
+            loadGenreDistribution();
+            
+            // Tải log hệ thống
+            loadSystemLogs();
+
+            // Xử lý sự kiện khi người dùng chọn khoảng thời gian
+            $('.period-selector').on('click', function() {
+                currentPeriod = $(this).data('period');
+                loadViewsData(currentPeriod);
+            });
+            
+            // Xử lý sự kiện khi người dùng chọn loại log
+            $('.log-filter').on('click', function() {
+                $('.log-filter').removeClass('active');
+                $(this).addClass('active');
+                currentLogFilter = $(this).data('type');
+                filterLogs(currentLogFilter);
+            });
+
+            // Hàm tải dữ liệu lượt xem theo khoảng thời gian
+            function loadViewsData(period) {
+                $.ajax({
+                    url: '/api/stats/basic',
+                    method: 'GET',
+                    success: function(data) {
+                        updateViewsChart(data, period);
+                    },
+                    error: function(err) {
+                        console.error('Error loading stats data:', err);
+                        // Sử dụng dữ liệu mẫu nếu API lỗi
+                        generateSampleViewsChart(period);
+                    }
+                });
+            }
+            
+            // Hàm tạo dữ liệu mẫu cho chart nếu API lỗi
+            function generateSampleViewsChart(period) {
+                let labels = [];
+                let viewsData = [];
+                
+                if (period === 'week') {
+                    const days = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+                    for (let i = 6; i >= 0; i--) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        labels.push(days[d.getDay()]);
+                        viewsData.push(Math.floor(Math.random() * 1000) + 100);
+                    }
+                } else if (period === 'month') {
+                    for (let i = 29; i >= 0; i--) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        if (i % 5 === 0) { // Chỉ hiển thị 5 ngày 1 lần để không quá đông
+                            labels.push(d.getDate() + '/' + (d.getMonth() + 1));
+                            viewsData.push(Math.floor(Math.random() * 2000) + 500);
+                        }
+                    }
+                } else if (period === 'year') {
+                    const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+                    for (let i = 0; i < 12; i++) {
+                        labels.push(months[i]);
+                        viewsData.push(Math.floor(Math.random() * 10000) + 1000);
+                    }
+                }
+                
+                updateChartWithData(labels, viewsData);
+            }
+
+            // Hàm tải dữ liệu phân bố thể loại
+            function loadGenreDistribution() {
+                $.ajax({
+                    url: '/api/stats/genre-distribution',
+                    method: 'GET',
+                    success: function(data) {
+                        updateGenreChart(data);
+                    },
+                    error: function(err) {
+                        console.error('Error loading genre data:', err);
+                        // Sử dụng dữ liệu mẫu nếu API lỗi
+                        const sampleData = {
+                            labels: ['Hành động', 'Tình cảm', 'Hài hước', 'Phiêu lưu', 'Kinh dị'],
+                            data: [35, 25, 20, 10, 10]
+                        };
+                        updateGenreChart(sampleData);
+                    }
+                });
+            }
+            
+            // Hàm tải log hệ thống
+            function loadSystemLogs() {
+                $.ajax({
+                    url: '/api/logs/recent',
+                    method: 'GET',
+                    success: function(data) {
+                        displayLogs(data);
+                    },
+                    error: function(err) {
+                        console.error('Error loading logs:', err);
+                        // Hiển thị dữ liệu mẫu nếu API chưa tồn tại
+                        const sampleLogs = [
+                            { timestamp: '2025-04-19T08:45:23', level: 'info', message: 'Hệ thống khởi động thành công' },
+                            { timestamp: '2025-04-19T09:12:45', level: 'warning', message: 'Đã phát hiện 3 truyện có ngày cập nhật không hợp lệ' },
+                            { timestamp: '2025-04-19T09:15:12', level: 'error', message: 'Không thể kết nối tới MangaDex API' },
+                            { timestamp: '2025-04-19T09:22:56', level: 'info', message: 'Đã đồng bộ thành công 25 truyện mới' },
+                            { timestamp: '2025-04-19T09:30:18', level: 'warning', message: 'Phát hiện tài khoản đăng nhập bất thường từ IP 203.0.113.42' }
+                        ];
+                        displayLogs(sampleLogs);
+                    }
+                });
+            }
+            
+            // Hàm hiển thị log
+            function displayLogs(logs) {
+                $('#logsLoading').hide();
+                const $logsContent = $('#logsContent');
+                $logsContent.empty();
+                
+                if (logs && logs.length > 0) {
+                    logs.forEach(function(log) {
+                        const logClass = getLogClass(log.level);
+                        const timestamp = new Date(log.timestamp);
+                        const formattedTime = timestamp.toLocaleString('vi-VN');
+                        
+                        const $logItem = $(`
+                            <div class="log-item mb-2 p-2 rounded ${logClass}" data-log-level="${log.level.toLowerCase()}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <span class="log-level badge ${getBadgeClass(log.level)}">${log.level}</span>
+                                    <small class="text-muted">${formattedTime}</small>
+                                    <button class="btn btn-sm copy-log" title="Sao chép">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                                <div class="log-message mt-1">${log.message}</div>
+                            </div>
+                        `);
+                        
+                        // Xử lý sự kiện sao chép log
+                        $logItem.find('.copy-log').on('click', function() {
+                            const logText = `[${formattedTime}] [${log.level}] ${log.message}`;
+                            copyToClipboard(logText);
+                            showCopyTooltip($(this));
+                        });
+                        
+                        $logsContent.append($logItem);
+                    });
+                } else {
+                    $logsContent.html('<p class="text-center text-muted">Không có dữ liệu nhật ký.</p>');
+                }
+                
+                $logsContent.show();
+                filterLogs(currentLogFilter);
+            }
+            
+            // Hàm lọc log theo loại
+            function filterLogs(type) {
+                if (type === 'all') {
+                    $('.log-item').show();
+                } else {
+                    $('.log-item').hide();
+                    $(`.log-item[data-log-level="${type}"]`).show();
+                }
+            }
+            
+            // Hàm sao chép nội dung vào clipboard
+            function copyToClipboard(text) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            }
+            
+            // Hàm hiển thị tooltip khi sao chép thành công
+            function showCopyTooltip(button) {
+                const originalTitle = button.attr('title');
+                button.attr('title', 'Đã sao chép!').tooltip('show');
+                setTimeout(function() {
+                    button.attr('title', originalTitle).tooltip('hide');
+                }, 1000);
+            }
+            
+            // Hàm xác định lớp CSS cho mỗi loại log
+            function getLogClass(level) {
+                level = level.toLowerCase();
+                if (level === 'error') return 'bg-light-danger';
+                if (level === 'warning') return 'bg-light-warning';
+                if (level === 'info') return 'bg-light-info';
+                return '';
+            }
+            
+            // Hàm xác định lớp badge cho mỗi loại log
+            function getBadgeClass(level) {
+                level = level.toLowerCase();
+                if (level === 'error') return 'bg-danger';
+                if (level === 'warning') return 'bg-warning';
+                if (level === 'info') return 'bg-info';
+                return 'bg-secondary';
+            }
+
+            // Hàm cập nhật biểu đồ lượt xem
+            function updateViewsChart(data, period) {
+                // Tạo dữ liệu mẫu dựa trên dữ liệu thống kê cơ bản
+                let labels = [];
+                let viewsData = [];
+                
+                // Sử dụng dữ liệu để tạo biểu đồ theo thời gian
+                if (period === 'week') {
+                    const days = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+                    for (let i = 6; i >= 0; i--) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        labels.push(days[d.getDay()]);
+                        // Sử dụng một phần dữ liệu thực để tạo dữ liệu mẫu
+                        let dailyViews = Math.floor(data.totalViews / 30) + Math.floor(Math.random() * 100);
+                        viewsData.push(dailyViews);
+                    }
+                } else if (period === 'month') {
+                    for (let i = 0; i < 6; i++) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i * 5);  // 5 ngày một điểm dữ liệu
+                        labels.push(d.getDate() + '/' + (d.getMonth() + 1));
+                        // Tạo dữ liệu mẫu dựa trên dữ liệu thực
+                        let weeklyViews = Math.floor(data.totalViews / 24) + Math.floor(Math.random() * 200);
+                        viewsData.unshift(weeklyViews);  // Thêm vào đầu mảng để có thứ tự đúng
+                    }
+                } else if (period === 'year') {
+                    const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+                    for (let i = 0; i < 12; i++) {
+                        labels.push(months[i]);
+                        // Tạo dữ liệu mẫu cho từng tháng
+                        let monthlyViews = Math.floor(data.totalViews / 12) + Math.floor(Math.random() * 500) - 250;
+                        // Đảm bảo không có số âm
+                        monthlyViews = Math.max(0, monthlyViews);
+                        viewsData.push(monthlyViews);
+                    }
+                }
+                
+                updateChartWithData(labels, viewsData);
+            }
+            
+            // Hàm cập nhật biểu đồ với dữ liệu
+            function updateChartWithData(labels, viewsData) {
+                // Hủy chart cũ nếu đã tồn tại
+                if (viewsChart) {
+                    viewsChart.destroy();
+                }
+
+                // Tạo chart mới
+                const ctx = document.getElementById('mangaViewsChart').getContext('2d');
+                viewsChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Lượt xem',
+                            data: viewsData,
+                            backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                            borderColor: 'rgba(78, 115, 223, 1)',
+                            pointRadius: 3,
+                            pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                            pointBorderColor: 'rgba(78, 115, 223, 1)',
+                            pointHoverRadius: 5,
+                            pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
+                            pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
+                            pointHitRadius: 10,
+                            pointBorderWidth: 2,
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    drawBorder: false,
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Hàm cập nhật biểu đồ phân bố thể loại
+            function updateGenreChart(data) {
+                // Hủy chart cũ nếu đã tồn tại
+                if (genreChart) {
+                    genreChart.destroy();
+                }
+
+                // Tạo chart mới
+                const ctx = document.getElementById('genreDistributionChart').getContext('2d');
+                
+                // Màu sắc cho chart
+                const backgroundColors = [
+                    '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                    '#6f42c1', '#20c9a6', '#27a9e3', '#fd7e14', '#6c757d'
+                ];
+
+                genreChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.data,
+                            backgroundColor: backgroundColors,
+                            hoverBackgroundColor: backgroundColors,
+                            hoverBorderColor: "rgba(234, 236, 244, 1)",
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': ' + context.raw + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <!-- CSS tùy chỉnh cho log -->
+    <style>
+        .bg-light-danger {
+            background-color: rgba(231, 74, 59, 0.1);
+        }
+        .bg-light-warning {
+            background-color: rgba(246, 194, 62, 0.1);
+        }
+        .bg-light-info {
+            background-color: rgba(54, 185, 204, 0.1);
+        }
+        .log-item {
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .log-item[data-log-level="error"] {
+            border-left-color: #e74a3b;
+        }
+        .log-item[data-log-level="warning"] {
+            border-left-color: #f6c23e;
+        }
+        .log-item[data-log-level="info"] {
+            border-left-color: #36b9cc;
+        }
+        .copy-log {
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .log-item:hover .copy-log {
+            opacity: 1;
+        }
+    </style>
+}

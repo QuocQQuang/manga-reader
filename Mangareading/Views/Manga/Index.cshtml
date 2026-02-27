@@ -1,0 +1,514 @@
+@model IEnumerable<Manga>
+@{
+    ViewData["Title"] = "Danh Sách Truyện";
+
+    // Add null checking for all ViewBag properties
+    var viewBag = ViewBag;
+    var currentSort = viewBag?.CurrentSort ?? "latest";
+    var currentSearch = viewBag?.CurrentSearch ?? "";
+
+    int? currentGenreId = null;
+    try
+    {
+        if (viewBag?.CurrentGenreId != null)
+        {
+            currentGenreId = Convert.ToInt32(viewBag.CurrentGenreId);
+        }
+    }
+    catch (Exception)
+    {
+        // If conversion fails, keep currentGenreId as null
+    }
+
+    var currentAuthor = viewBag?.CurrentAuthor ?? "";
+    var currentStatus = viewBag?.CurrentStatus ?? "";
+    var genres = viewBag?.Genres as List<Genre> ?? new List<Genre>();
+    var errorMessage = viewBag?.ErrorMessage as string;
+    var totalPages = 1;
+    var currentPage = 1;
+
+    try
+    {
+        if (viewBag?.TotalPages != null)
+        {
+            totalPages = Convert.ToInt32(viewBag.TotalPages);
+        }
+
+        if (viewBag?.CurrentPage != null)
+        {
+            currentPage = Convert.ToInt32(viewBag.CurrentPage);
+        }
+    }
+    catch (Exception)
+    {
+        // If conversion fails, keep default values
+    }
+
+    // Helper function to display relative time
+    string GetRelativeTime(DateTimeOffset date)
+    {
+        var timeSpan = DateTimeOffset.Now - date;
+
+        if (timeSpan.TotalMinutes < 1)
+            return "vừa xong";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes} phút trước";
+        if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours} giờ trước";
+        if (timeSpan.TotalDays < 30)
+            return $"{(int)timeSpan.TotalDays} ngày trước";
+        if (timeSpan.TotalDays < 365)
+            return $"{(int)(timeSpan.TotalDays / 30)} tháng trước";
+
+        return $"{(int)(timeSpan.TotalDays / 365)} năm trước";
+    }
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Danh Sách Truyện</h1>
+
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-sort-amount-down me-1"></i>
+                    @(currentSort == "latest" ? "Mới cập nhật" :
+                      currentSort == "newest" ? "Mới đăng" :
+                      currentSort == "oldest" ? "Cũ nhất" :
+                      currentSort == "az" ? "Tên A-Z" :
+                      currentSort == "za" ? "Tên Z-A" :
+                      currentSort == "views" ? "Lượt xem" : "Sắp xếp")
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+                    <li><a class="dropdown-item @(currentSort == "latest" ? "active" : "")" href="@Url.Action("Index", new { sort = "latest", page = currentPage, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })">Mới cập nhật</a></li>
+                    <li><a class="dropdown-item @(currentSort == "newest" ? "active" : "")" href="@Url.Action("Index", new { sort = "newest", page = currentPage, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })">Mới đăng</a></li>
+                    <li><a class="dropdown-item @(currentSort == "az" ? "active" : "")" href="@Url.Action("Index", new { sort = "az", page = currentPage, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })">Tên A-Z</a></li>
+                    <li><a class="dropdown-item @(currentSort == "za" ? "active" : "")" href="@Url.Action("Index", new { sort = "za", page = currentPage, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })">Tên Z-A</a></li>
+                    <li><a class="dropdown-item @(currentSort == "views" ? "active" : "")" href="@Url.Action("Index", new { sort = "views", page = currentPage, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })">Lượt xem</a></li>
+                    <li><a class="dropdown-item @(currentSort == "oldest" ? "active" : "")" href="@Url.Action("Index", new { sort = "oldest", page = currentPage, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })">Cũ nhất</a></li>
+                </ul>
+            </div>
+
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-filter me-1"></i> Trạng thái
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown">
+                    <li><a class="dropdown-item @(string.IsNullOrEmpty(currentStatus) ? "active" : "")" href="@Url.Action("Index", new { status = "", page = currentPage, search = currentSearch, genreId = currentGenreId, author = currentAuthor, sort = currentSort })">Tất cả</a></li>
+                    <li><a class="dropdown-item @(currentStatus == "ongoing" ? "active" : "")" href="@Url.Action("Index", new { status = "ongoing", page = currentPage, search = currentSearch, genreId = currentGenreId, author = currentAuthor, sort = currentSort })">Đang tiến hành</a></li>
+                    <li><a class="dropdown-item @(currentStatus == "completed" ? "active" : "")" href="@Url.Action("Index", new { status = "completed", page = currentPage, search = currentSearch, genreId = currentGenreId, author = currentAuthor, sort = currentSort })">Đã hoàn thành</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search form -->
+    <div class="bg-white rounded shadow-sm p-3 mb-4">
+        <form method="get" action="@Url.Action("Index")">
+            <input type="hidden" name="sort" value="@currentSort" />
+            <input type="hidden" name="genreId" value="@currentGenreId" />
+            <input type="hidden" name="status" value="@currentStatus" />
+            <input type="hidden" name="author" value="@currentAuthor" />
+
+            <div class="row g-2">
+                <div class="col-md-10">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-search"></i></span>
+                        <input type="text" name="search" class="form-control ps-0 border-start-0" placeholder="Tìm kiếm truyện..." value="@currentSearch">
+                        <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary w-100 @(string.IsNullOrEmpty(currentSearch) && !currentGenreId.HasValue && string.IsNullOrEmpty(currentAuthor) && string.IsNullOrEmpty(currentStatus) ? "disabled" : "")">
+                        <i class="fas fa-times me-1"></i> Xóa bộ lọc
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Genre tags -->
+    <div class="bg-white rounded shadow-sm p-3 mb-4">
+        <div class="row">
+            <div class="col-md-10">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="@Url.Action("Index", new { sort = currentSort, page = 1, search = currentSearch, author = currentAuthor, status = currentStatus })"
+                       class="badge @(currentGenreId.HasValue ? "bg-light text-dark" : "bg-primary") text-decoration-none">Tất cả</a>
+
+                    @foreach (var genre in genres)
+                    {
+                        <a href="@Url.Action("Index", new { sort = currentSort, page = 1, search = currentSearch, genreId = genre.GenreId, author = currentAuthor, status = currentStatus })"
+                           class="badge @(currentGenreId.HasValue && currentGenreId.Value == genre.GenreId ? "bg-primary" : "bg-light text-dark") text-decoration-none">
+                            @genre.GenreName
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="col-md-2 text-end">
+                <a href="@Url.Action("Advanced", "Search")" class="small">Tìm kiếm nâng cao</a>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mb-4">
+            <h4><i class="fas fa-exclamation-circle me-2"></i> Lỗi</h4>
+            <p class="mb-0">@errorMessage</p>
+        </div>
+    }
+
+    <!-- Active filters display -->
+    @if (!string.IsNullOrEmpty(currentSearch) || currentGenreId.HasValue || !string.IsNullOrEmpty(currentAuthor) || !string.IsNullOrEmpty(currentStatus))
+    {
+        <div class="alert alert-info mb-4">
+            <h6 class="mb-2">Bộ lọc hiện tại:</h6>
+            <div class="d-flex flex-wrap gap-2">
+                @if (!string.IsNullOrEmpty(currentSearch))
+                {
+                    <span class="badge bg-info text-dark">
+                        <i class="fas fa-search me-1"></i> Tìm kiếm: @currentSearch
+                        <a href="@Url.Action("Index", new { sort = currentSort, page = 1, genreId = currentGenreId, author = currentAuthor, status = currentStatus })"
+                           class="ms-1 text-dark"><i class="fas fa-times"></i></a>
+                    </span>
+                }
+
+                @if (currentGenreId.HasValue)
+                {
+                    var genreName = genres.FirstOrDefault(g => g.GenreId == currentGenreId.Value)?.GenreName ?? "Thể loại";
+                    <span class="badge bg-info text-dark">
+                        <i class="fas fa-tag me-1"></i> Thể loại: @genreName
+                        <a href="@Url.Action("Index", new { sort = currentSort, page = 1, search = currentSearch, author = currentAuthor, status = currentStatus })"
+                           class="ms-1 text-dark"><i class="fas fa-times"></i></a>
+                    </span>
+                }
+
+                @if (!string.IsNullOrEmpty(currentAuthor))
+                {
+                    <span class="badge bg-info text-dark">
+                        <i class="fas fa-user me-1"></i> Tác giả: @currentAuthor
+                        <a href="@Url.Action("Index", new { sort = currentSort, page = 1, search = currentSearch, genreId = currentGenreId, status = currentStatus })"
+                           class="ms-1 text-dark"><i class="fas fa-times"></i></a>
+                    </span>
+                }
+
+                @if (!string.IsNullOrEmpty(currentStatus))
+                {
+                    <span class="badge bg-info text-dark">
+                        <i class="fas fa-bookmark me-1"></i> Trạng thái: @(currentStatus == "ongoing" ? "Đang tiến hành" : "Đã hoàn thành")
+                        <a href="@Url.Action("Index", new { sort = currentSort, page = 1, search = currentSearch, genreId = currentGenreId, author = currentAuthor })"
+                           class="ms-1 text-dark"><i class="fas fa-times"></i></a>
+                    </span>
+                }
+            </div>
+        </div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-warning">
+            <h4><i class="fas fa-exclamation-triangle me-2"></i> Không tìm thấy truyện nào</h4>
+            <p class="mb-0">Không có truyện nào phù hợp với bộ lọc hiện tại. Vui lòng thử lại với bộ lọc khác.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var manga in Model)
+            {
+                <div class="col-lg-3 col-md-4 col-sm-6 col-6">
+                    <div class="manga-card">
+                        <div class="position-relative manga-cover-container">
+                            <a href="@Url.Action("Details", "Manga", new { id = manga.MangaId })">
+                                <img class="manga-cover" 
+                                     src="@(string.IsNullOrEmpty(manga.CoverUrl) ? "/images/no-cover.png" : manga.CoverUrl)"
+                                     alt="@manga.Title" 
+                                     loading="lazy" 
+                                     onerror="this.onerror=null; this.src='/images/no-cover.png';">
+
+                                <!-- Overlay elements inside image -->
+                                <div class="manga-overlay-stats">
+                                    <!-- Views count - top left -->
+                                    <div class="stats-views">
+                                        <i class="fas fa-eye"></i> @(manga.ViewCount ?? 0)
+                                    </div>
+
+                                    <!-- Chapter count - top right -->
+                                    <div class="stats-chapters">
+                                        <i class="fas fa-book"></i> @(manga.ChapterCount ?? 0)
+                                    </div>
+
+                                    <!-- Reading progress - bottom left (placeholder) -->
+                                    <div class="stats-progress">
+                                        @if (User.Identity.IsAuthenticated)
+                                        {
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-bookmark"></i> 0%
+                                            </span>
+                                        }
+                                    </div>
+
+                                    <!-- Author - bottom right -->
+                                    @if (!string.IsNullOrEmpty(manga.Author))
+                                    {
+                                        <div class="stats-author">
+                                            <a href="@Url.Action("Index", new { author = manga.Author, sort = currentSort })" class="text-white author-link-overlay">
+                                                <i class="fas fa-user me-1"></i>@manga.Author
+                                            </a>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Reading progress bar -->
+                                @if (User.Identity.IsAuthenticated && manga.ChapterCount.HasValue && manga.ChapterCount > 0)
+                                {
+                                    <div class="manga-progress-container">
+                                        @{
+                                            // In a real implementation, you would get this from the user's reading progress
+                                            // For demonstration, we'll use a random percentage
+                                            Random rand = new Random();
+                                            int readPercentage = rand.Next(0, 101); // 0-100%
+                                        }
+                                        <div class="manga-progress-bar" style="width: @readPercentage%;">
+                                            <span class="manga-progress-text">@readPercentage%</span>
+                                        </div>
+                                    </div>
+                                }
+                            </a>
+                        </div>
+
+                        <div class="p-2">
+                            <a href="@Url.Action("Details", "Manga", new { id = manga.MangaId })" class="text-decoration-none">
+                                <h5 class="manga-title mb-1">@manga.Title</h5>
+                            </a>
+
+                            <div class="d-flex justify-content-between align-items-center small">
+                                <a href="@Url.Action("Index", new { status = manga.Status, sort = currentSort })" class="text-decoration-none">
+                                    <span class="badge @(manga.Status == "ongoing" ? "bg-success" : "bg-primary")">
+                                        @(manga.Status == "ongoing" ? "Đang tiến hành" : (manga.Status == "completed" ? "Hoàn thành" : manga.Status))
+                                    </span>
+                                </a>
+                                <span class="text-muted">
+                                    <i class="fas fa-calendar-alt me-1"></i> @GetRelativeTime(manga.UpdatedAt)
+                                </span>
+                            </div>
+
+                            @if (ViewBag.LatestChapters != null && ViewBag.LatestChapters.ContainsKey(manga.MangaId))
+                            {
+                                var latestChapters = ViewBag.LatestChapters[manga.MangaId] as List<Chapter>;
+                                if (latestChapters != null && latestChapters.Any())
+                                {
+                                    <div class="mt-2 small">
+                                        <ul class="list-unstyled m-0">
+                                            @foreach (var chapter in latestChapters)
+                                            {
+                                                <li class="mb-1">
+                                                    <div class="d-flex justify-content-between">
+                                                        <a href="@Url.Action("Read", "Chapter", new { id = chapter.ChapterId })" class="text-decoration-none">
+                                                            <span>Ch. @chapter.ChapterNumber.ToString("0.#")</span>
+                                                        </a>
+                                                        <span class="text-muted">@GetRelativeTime(chapter.UploadDate)</span>
+                                                    </div>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                            }
+
+                            <!-- Genre tags (small) -->
+                            @if (manga.MangaGenres?.Any() == true)
+                            {
+                                <div class="mt-2 d-flex flex-wrap gap-1">
+                                    @foreach (var mg in manga.MangaGenres.Take(3))
+                                    {
+                                        <a href="@Url.Action("Index", new { genreId = mg.GenreId, sort = currentSort })"
+                                           class="badge bg-light text-dark text-decoration-none small">
+                                            @mg.Genre.GenreName
+                                        </a>
+                                    }
+                                    @if (manga.MangaGenres.Count() > 3)
+                                    {
+                                        <span class="badge bg-light text-dark small">+@(manga.MangaGenres.Count() - 3)</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Manga Detail Hover Popup (side popup instead of overlay) -->
+                        <div class="manga-hover-popup">
+                            <div class="manga-hover-popup-content">
+                                <div class="popup-header mb-2">
+                                    <h5 class="popup-title">@manga.Title</h5>
+                                    @if (!string.IsNullOrEmpty(manga.AlternativeTitle))
+                                    {
+                                        <p class="small text-muted mb-1">@manga.AlternativeTitle</p>
+                                    }
+                                </div>
+
+                                <div class="popup-info">
+                                    <div class="d-flex mb-2">
+                                        <div class="text-center me-3">
+                                            <div class="small fw-bold"><i class="fas fa-eye"></i></div>
+                                            <div>@(manga.ViewCount ?? 0)</div>
+                                        </div>
+                                        <div class="text-center me-3">
+                                            <div class="small fw-bold"><i class="fas fa-heart"></i></div>
+                                            <div>0</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="small fw-bold"><i class="fas fa-book"></i></div>
+                                            <div>@(manga.ChapterCount ?? 0)</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="popup-details small">
+                                        @if (!string.IsNullOrEmpty(manga.Author))
+                                        {
+                                            <div class="mb-1">
+                                                <span class="fw-bold me-2">Tác giả:</span>
+                                                <a href="@Url.Action("Index", new { author = manga.Author, sort = currentSort })" class="author-link">
+                                                    @manga.Author
+                                                </a>
+                                            </div>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(manga.Status))
+                                        {
+                                            <div class="mb-1">
+                                                <span class="fw-bold me-2">Trạng thái:</span>
+                                                <a href="@Url.Action("Index", new { status = manga.Status, sort = currentSort })">
+                                                    @manga.Status
+                                                </a>
+                                            </div>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(manga.OriginalLanguage))
+                                        {
+                                            <div class="mb-1">
+                                                <span class="fw-bold me-2">Ngôn ngữ gốc:</span>
+                                                <span>@manga.OriginalLanguage</span>
+                                            </div>
+                                        }
+
+                                        @if (manga.MangaGenres?.Any() == true)
+                                        {
+                                            <div class="mb-1">
+                                                <span class="fw-bold me-2">Thể loại:</span>
+                                                <div class="d-flex flex-wrap gap-1 mt-1">
+                                                    @foreach (var mg in manga.MangaGenres)
+                                                    {
+                                                        <a href="@Url.Action("Index", new { genreId = mg.GenreId, sort = currentSort })"
+                                                           class="badge bg-light text-dark text-decoration-none">
+                                                            @mg.Genre.GenreName
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(manga.Description))
+                                    {
+                                        <div class="popup-description small mt-2">
+                                            @(manga.Description.Length > 150 ? manga.Description.Substring(0, 150) + "..." : manga.Description)
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Enhanced Pagination UI -->
+    <div class="pagination-container mt-5">
+        <ul class="pagination justify-content-center">
+            <!-- First page -->
+            <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { page = 1, sort = currentSort, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })" aria-label="First">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+            </li>
+
+            <!-- Previous page -->
+            <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { page = currentPage - 1, sort = currentSort, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })" aria-label="Previous">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            </li>
+
+            @{
+                int startPage = Math.Max(1, currentPage - 2);
+                int endPage = Math.Min(totalPages, startPage + 4);
+                startPage = Math.Max(1, endPage - 4);
+            }
+
+            @for (int i = startPage; i <= endPage; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = i, sort = currentSort, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })">@i</a>
+                </li>
+            }
+
+            <!-- If there's a gap to the end, show middle page -->
+            @if (endPage < totalPages - 1)
+            {
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                <li class="page-item">
+                    <a class="page-link" href="@Url.Action("Index", new { page = (int)Math.Ceiling((totalPages + endPage) / 2.0), sort = currentSort, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })">
+                        @((int)Math.Ceiling((totalPages + endPage) / 2.0))
+                    </a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            }
+
+            <!-- If we're not showing the last page in the range, show it separately -->
+            @if (endPage < totalPages)
+            {
+                <li class="page-item">
+                    <a class="page-link" href="@Url.Action("Index", new { page = totalPages, sort = currentSort, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })">
+                        @totalPages
+                    </a>
+                </li>
+            }
+
+            <!-- Next page -->
+            <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { page = currentPage + 1, sort = currentSort, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })" aria-label="Next">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+
+            <!-- Last page -->
+            <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { page = totalPages, sort = currentSort, search = currentSearch, genreId = currentGenreId, author = currentAuthor, status = currentStatus })" aria-label="Last">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Page input form -->
+        <div class="pagination-goto text-center mt-3">
+            <form class="d-inline-flex" method="get" action="@Url.Action("Index")">
+                <input type="hidden" name="sort" value="@currentSort" />
+                <input type="hidden" name="search" value="@currentSearch" />
+                <input type="hidden" name="genreId" value="@currentGenreId" />
+                <input type="hidden" name="author" value="@currentAuthor" />
+                <input type="hidden" name="status" value="@currentStatus" />
+                <div class="input-group input-group-sm" style="width: 150px;">
+                    <span class="input-group-text">Trang</span>
+                    <input type="number" name="page" class="form-control" min="1" max="@totalPages" value="@currentPage" />
+                    <button class="btn btn-primary" type="submit"><i class="fas fa-arrow-right"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components/manga-card.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/filter-bar.css" asp-append-version="true" />
+}

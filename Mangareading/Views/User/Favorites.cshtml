@@ -1,0 +1,204 @@
+@model List<Mangareading.Models.Manga>
+@{
+    ViewData["Title"] = "Truyện yêu thích";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Truyện yêu thích</h1>
+        @if (Model.Any())
+        {
+            <div>
+                <button id="clearAllFavorites" class="btn btn-danger">
+                    <i class="fas fa-trash-alt me-2"></i> Xóa tất cả
+                </button>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <p>Bạn chưa có truyện yêu thích nào.</p>
+            <p>Hãy bắt đầu thêm truyện vào danh sách yêu thích!</p>
+            <a href="/" class="btn btn-primary">Khám phá truyện</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var manga in Model)
+            {
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 manga-card">
+                        <div class="position-relative">
+                            <a href="@Url.Action("Details", "Manga", new { id = manga.MangaId })">
+                                <img src="@(string.IsNullOrEmpty(manga.CoverUrl) ? "/images/no-cover.png" : manga.CoverUrl)" 
+                                     class="card-img-top manga-cover" 
+                                     alt="@manga.Title" 
+                                     loading="lazy" 
+                                     onerror="this.onerror=null; this.src='/images/no-cover.png';">
+                            </a>
+                            <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 remove-favorite" 
+                                    data-manga-id="@manga.MangaId" data-bs-toggle="tooltip" title="Xóa khỏi yêu thích">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <div class="position-absolute bottom-0 start-0 m-2">
+                                <span class="badge bg-light text-dark">
+                                    @(manga.Status == "ongoing" ? "Đang tiến hành" : (manga.Status == "completed" ? "Hoàn thành" : manga.Status))
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title text-truncate">@manga.Title</h5>
+                            <p class="card-text small text-muted mb-1">
+                                <i class="fas fa-user me-1"></i> @(manga.Author ?? "Không có tác giả")
+                            </p>
+                            <p class="card-text small text-description">
+                                @if (!string.IsNullOrEmpty(manga.Description) && manga.Description.Length > 80)
+                                {
+                                    @(manga.Description.Substring(0, 80) + "...")
+                                }
+                                else
+                                {
+                                    @manga.Description
+                                }
+                            </p>
+                            <div class="d-flex gap-2 mt-3">
+                                <a href="/manga/@manga.MangaId" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                    <i class="fas fa-info-circle me-1"></i> Chi tiết
+                                </a>
+                                <a href="/chapter/list/@manga.MangaId" class="btn btn-sm btn-primary flex-grow-1">
+                                    <i class="fas fa-book-open me-1"></i> Đọc ngay
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .manga-cover {
+            height: 250px;
+            object-fit: cover;
+        }
+        
+        .manga-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .manga-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        .text-description {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            height: 4.5em;
+        }
+    </style>
+}
+
+@section Scripts {
+<script>
+    $(document).ready(function() {
+        // Xóa một mục trong danh sách yêu thích
+        $('.remove-favorite').click(function() {
+            const mangaId = $(this).data('manga-id');
+            const card = $(this).closest('.col-md-3');
+            
+            if (confirm('Bạn có chắc muốn xóa truyện này khỏi danh sách yêu thích?')) {
+                $.ajax({
+                    url: `/api/MangaStatistics/favorite/${mangaId}`,
+                    type: 'POST',
+                    success: function(response) {
+                        // Hiệu ứng xoá card và kiểm tra nếu không còn truyện nào
+                        card.fadeOut(300, function() {
+                            $(this).remove();
+                            
+                            // Kiểm tra nếu không còn truyện nào
+                            if ($('.manga-card').length === 0) {
+                                location.reload(); // Tải lại trang để hiển thị thông báo "không có truyện yêu thích"
+                            }
+                        });
+                        
+                        // Hiện thông báo
+                        showToast('Đã xóa khỏi danh sách yêu thích', 'success');
+                    },
+                    error: function(error) {
+                        console.error('Lỗi khi xóa khỏi danh sách yêu thích:', error);
+                        showToast('Không thể xóa khỏi danh sách yêu thích', 'error');
+                    }
+                });
+            }
+        });
+        
+        // Xóa tất cả yêu thích
+        $('#clearAllFavorites').click(function() {
+            if (confirm('Bạn có chắc muốn xóa tất cả truyện khỏi danh sách yêu thích? Hành động này không thể hoàn tác.')) {
+                // Lấy tất cả manga IDs từ các nút remove
+                const mangaIds = $('.remove-favorite').map(function() {
+                    return $(this).data('manga-id');
+                }).get();
+                
+                // Đếm số lượng truyện cần xóa
+                let totalMangas = mangaIds.length;
+                let deletedCount = 0;
+                
+                // Xóa từng truyện một và đếm
+                mangaIds.forEach(function(mangaId) {
+                    $.ajax({
+                        url: `/api/MangaStatistics/favorite/${mangaId}`,
+                        type: 'POST',
+                        success: function() {
+                            deletedCount++;
+                            if (deletedCount === totalMangas) {
+                                // Tất cả đã xóa xong
+                                location.reload();
+                                showToast('Đã xóa tất cả truyện khỏi danh sách yêu thích', 'success');
+                            }
+                        },
+                        error: function() {
+                            showToast('Có lỗi xảy ra khi xóa truyện. Vui lòng thử lại.', 'error');
+                        }
+                    });
+                });
+            }
+        });
+        
+        // Hàm hiển thị thông báo
+        function showToast(message, type = 'info') {
+            const toast = `
+                <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : type === 'warning' ? 'warning' : 'info'}" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+
+            // Tạo container cho toast nếu chưa tồn tại
+            if (!$('#toastContainer').length) {
+                $('body').append('<div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>');
+            }
+            
+            $('#toastContainer').append(toast);
+            const toastEl = $('.toast').last();
+            const bsToast = new bootstrap.Toast(toastEl, { delay: 3000 });
+            bsToast.show();
+        }
+        
+        // Khởi tạo tooltips
+        $('[data-bs-toggle="tooltip"]').tooltip();
+    });
+</script>
+}

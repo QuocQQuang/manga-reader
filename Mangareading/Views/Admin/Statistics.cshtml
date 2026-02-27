@@ -1,0 +1,800 @@
+@{
+    ViewData["Title"] = "Thống Kê & Báo Cáo";
+    Layout = "_AdminLayout";
+    
+    var basicStats = ViewBag.BasicStats;
+    var topManga = ViewBag.TopManga;
+}
+
+<div class="statistics-container">
+    <div class="mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Thống Kê & Báo Cáo</h1>
+        <p class="text-muted">Phân tích dữ liệu của hệ thống</p>
+    </div>
+
+    <!-- Date Range Selector -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form class="row align-items-center">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <label for="dateRangeSelect" class="form-label">Khoảng Thời Gian</label>
+                    <select id="dateRangeSelect" class="form-select">
+                        <option value="day">Hôm nay</option>
+                        <option value="week">7 ngày qua</option>
+                        <option value="month" selected>30 ngày qua</option>
+                        <option value="year">Năm nay</option>
+                        <option value="custom">Tùy chỉnh</option>
+                    </select>
+                </div>
+                <div class="col-md-7 mb-3 mb-md-0" id="customDateContainer" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="startDate" class="form-label">Từ Ngày</label>
+                            <input type="date" id="startDate" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="endDate" class="form-label">Đến Ngày</label>
+                            <input type="date" id="endDate" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-1 d-flex align-items-end justify-content-end">
+                    <button type="button" id="updateStats" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i> Cập Nhật
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-primary h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng Lượt Xem</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@basicStats.TotalViews.ToString("N0")</div>
+                            <div class="text-xs text-success mt-1">
+                                <i class="fas fa-chart-line me-1"></i>Thống kê thực
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-eye fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-success h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Tổng Người Dùng</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@basicStats.TotalUsers.ToString("N0")</div>
+                            <div class="text-xs text-success mt-1">
+                                <i class="fas fa-chart-line me-1"></i>Thống kê thực
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-plus fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-info h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Tổng Truyện</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@basicStats.TotalManga.ToString("N0")</div>
+                            <div class="text-xs text-success mt-1">
+                                <i class="fas fa-chart-line me-1"></i>Thống kê thực
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-warning h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Tổng Chapter</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@basicStats.TotalChapters.ToString("N0")</div>
+                            <div class="text-xs text-success mt-1">
+                                <i class="fas fa-chart-line me-1"></i>Thống kê thực
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <!-- Traffic Chart -->
+        <div class="col-xl-8 col-lg-7 mb-4">
+            <div class="card chart-container">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Thống Kê Lượt Xem</h6>
+                    <div class="dropdown no-arrow">
+                        <button class="btn btn-link btn-sm dropdown-toggle" type="button" id="trafficDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="trafficDropdown">
+                            <a class="dropdown-item period-selector" href="javascript:void(0);" data-period="day">Hôm nay</a>
+                            <a class="dropdown-item period-selector" href="javascript:void(0);" data-period="week">7 ngày qua</a>
+                            <a class="dropdown-item period-selector" href="javascript:void(0);" data-period="month">30 ngày qua</a>
+                            <a class="dropdown-item period-selector" href="javascript:void(0);" data-period="year">Năm nay</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Genre Distribution Chart -->
+        <div class="col-xl-4 col-lg-5 mb-4">
+            <div class="card chart-container">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Phân Bố Thể Loại</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="genreChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row Charts -->
+    <div class="row">
+        <!-- User Growth Chart -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card chart-container">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Tăng Trưởng Người Dùng</h6>
+                    <div class="dropdown no-arrow">
+                        <button class="btn btn-link btn-sm dropdown-toggle" type="button" id="userGrowthDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userGrowthDropdown">
+                            <a class="dropdown-item user-period-selector" href="javascript:void(0);" data-period="day">Hôm nay</a>
+                            <a class="dropdown-item user-period-selector" href="javascript:void(0);" data-period="week">7 ngày qua</a>
+                            <a class="dropdown-item user-period-selector" href="javascript:void(0);" data-period="month">30 ngày qua</a>
+                            <a class="dropdown-item user-period-selector" href="javascript:void(0);" data-period="year">Năm nay</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="userGrowthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Manga Chart -->
+        <div class="col-xl-6 col-lg-6 mb-4">
+            <div class="card chart-container">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Top 10 Truyện Xem Nhiều Nhất</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar">
+                        <canvas id="topMangaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Manga Table -->
+    <div class="card mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Top 10 Truyện Được Xem Nhiều Nhất</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên Truyện</th>
+                            <th>Tổng Lượt Xem</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (topManga != null && topManga.Count > 0)
+                        {
+                            @for (int i = 0; i < topManga.Count; i++)
+                            {
+                                var manga = topManga[i];
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if (!string.IsNullOrEmpty(manga.CoverUrl))
+                                            {
+                                                <img src="@manga.CoverUrl" alt="Cover" width="40" height="56" class="me-2" style="object-fit: cover;">
+                                            }
+                                            else
+                                            {
+                                                <img src="/images/default-cover.jpg" alt="Cover" width="40" height="56" class="me-2" style="object-fit: cover;">
+                                            }
+                                            <div>
+                                                <div>@manga.Title</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>@manga.ViewCount.ToString("N0")</td>
+                                    <td>
+                                        <a href="/admin/manga/@manga.MangaId" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center">Không có dữ liệu truyện</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script>
+        // Charts instances
+        let trafficChart = null;
+        let genreChart = null;
+        let userGrowthChart = null;
+        let topMangaChart = null;
+        
+        // Current periods for each chart
+        let trafficPeriod = '@ViewBag.DefaultPeriod';
+        let userGrowthPeriod = '@ViewBag.DefaultPeriod';
+        
+        $(document).ready(function() {
+            // Initialize charts with initial data
+            initializeCharts();
+            
+            // Setup event listeners
+            setupEventListeners();
+        });
+        
+        // Initialize all charts with initial data
+        function initializeCharts() {
+            // Initialize Traffic Chart
+            initTrafficChart(@Html.Raw(Json.Serialize(ViewBag.ViewsData)));
+            
+            // Initialize Genre Distribution Chart
+            initGenreChart(@Html.Raw(Json.Serialize(ViewBag.GenreDistribution)));
+            
+            // Initialize User Growth Chart
+            initUserGrowthChart(@Html.Raw(Json.Serialize(ViewBag.UserGrowthData)));
+            
+            // Initialize Top Manga Chart
+            initTopMangaChart(@Html.Raw(Json.Serialize(ViewBag.TopManga)));
+        }
+        
+        // Setup event listeners for interactive features
+        function setupEventListeners() {
+            // Date range selector change event
+            $('#dateRangeSelect').on('change', function() {
+                const selectedValue = $(this).val();
+                if (selectedValue === 'custom') {
+                    $('#customDateContainer').show();
+                } else {
+                    $('#customDateContainer').hide();
+                    
+                    // Update all charts based on selected period
+                    trafficPeriod = selectedValue;
+                    userGrowthPeriod = selectedValue;
+                    
+                    updateTrafficChart(selectedValue);
+                    updateUserGrowthChart(selectedValue);
+                    // For top manga, we'll use a date range based on the period
+                    updateTopMangaChart(getDateRangeFromPeriod(selectedValue));
+                }
+            });
+            
+            // Update button click event
+            $('#updateStats').on('click', function() {
+                // If custom date range is selected
+                if ($('#dateRangeSelect').val() === 'custom') {
+                    const startDate = $('#startDate').val();
+                    const endDate = $('#endDate').val();
+                    
+                    if (startDate && endDate) {
+                        updateAllChartsWithCustomRange(startDate, endDate);
+                    } else {
+                        alert('Vui lòng chọn ngày bắt đầu và ngày kết thúc');
+                    }
+                }
+            });
+            
+            // Period selector for Traffic Chart
+            $('.period-selector').on('click', function() {
+                const period = $(this).data('period');
+                trafficPeriod = period;
+                updateTrafficChart(period);
+            });
+            
+            // Period selector for User Growth Chart
+            $('.user-period-selector').on('click', function() {
+                const period = $(this).data('period');
+                userGrowthPeriod = period;
+                updateUserGrowthChart(period);
+            });
+        }
+        
+        // Initialize Traffic Chart with data
+        function initTrafficChart(data) {
+            const ctx = document.getElementById('trafficChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (trafficChart) {
+                trafficChart.destroy();
+            }
+            
+            trafficChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Lượt xem',
+                        data: data.data,
+                        backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                        borderColor: 'rgba(78, 115, 223, 1)',
+                        pointRadius: 3,
+                        pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                        pointBorderColor: 'rgba(78, 115, 223, 1)',
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
+                        pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
+                        pointHitRadius: 10,
+                        pointBorderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            left: 10,
+                            right: 25,
+                            top: 25,
+                            bottom: 0
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: "rgb(234, 236, 244)",
+                                zeroLineColor: "rgb(234, 236, 244)",
+                                drawBorder: false,
+                                borderDash: [2],
+                                zeroLineBorderDash: [2]
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: "rgb(255, 255, 255)",
+                            bodyColor: "#858796",
+                            titleMarginBottom: 10,
+                            titleColor: '#6e707e',
+                            titleFontSize: 14,
+                            borderColor: '#dddfeb',
+                            borderWidth: 1,
+                            xPadding: 15,
+                            yPadding: 15,
+                            displayColors: false,
+                            intersect: false,
+                            mode: 'index',
+                            caretPadding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    return `Lượt xem: ${context.parsed.y.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize Genre Distribution Chart with data
+        function initGenreChart(data) {
+            const ctx = document.getElementById('genreChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (genreChart) {
+                genreChart.destroy();
+            }
+            
+            // Colors for the pie chart
+            const backgroundColors = [
+                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                '#fd7e14', '#6f42c1', '#6610f2', '#20c997', '#17a2b8'
+            ];
+            
+            genreChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: backgroundColors,
+                        hoverBackgroundColor: backgroundColors,
+                        hoverBorderColor: "white"
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.formattedValue;
+                                    return `${label}: ${value}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize User Growth Chart with data
+        function initUserGrowthChart(data) {
+            const ctx = document.getElementById('userGrowthChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (userGrowthChart) {
+                userGrowthChart.destroy();
+            }
+            
+            userGrowthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Người dùng mới',
+                        data: data.data,
+                        backgroundColor: 'rgba(28, 200, 138, 0.05)',
+                        borderColor: 'rgba(28, 200, 138, 1)',
+                        pointRadius: 3,
+                        pointBackgroundColor: 'rgba(28, 200, 138, 1)',
+                        pointBorderColor: 'rgba(28, 200, 138, 1)',
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: 'rgba(28, 200, 138, 1)',
+                        pointHoverBorderColor: 'rgba(28, 200, 138, 1)',
+                        pointHitRadius: 10,
+                        pointBorderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            precision: 0,
+                            grid: {
+                                color: "rgb(234, 236, 244)",
+                                zeroLineColor: "rgb(234, 236, 244)",
+                                drawBorder: false,
+                                borderDash: [2],
+                                zeroLineBorderDash: [2]
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize Top Manga Chart with data
+        function initTopMangaChart(data) {
+            const ctx = document.getElementById('topMangaChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (topMangaChart) {
+                topMangaChart.destroy();
+            }
+            
+            // Prepare data for chart
+            const mangaTitles = [];
+            const viewCounts = [];
+            
+            // Get top 10 manga or less
+            const mangaCount = Math.min(data.length, 10);
+            
+            // Process data in reverse order (for horizontal bar chart)
+            for (let i = 0; i < mangaCount; i++) {
+                const manga = data[i];
+                mangaTitles.push(manga.title.length > 20 ? manga.title.substring(0, 20) + '...' : manga.title);
+                viewCounts.push(manga.viewCount);
+            }
+            
+            // Reverse arrays to have highest at top
+            mangaTitles.reverse();
+            viewCounts.reverse();
+            
+            topMangaChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: mangaTitles,
+                    datasets: [{
+                        label: 'Lượt xem',
+                        data: viewCounts,
+                        backgroundColor: 'rgba(54, 185, 204, 0.8)',
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                color: "rgb(234, 236, 244)",
+                                zeroLineColor: "rgb(234, 236, 244)",
+                                drawBorder: false,
+                                borderDash: [2],
+                                zeroLineBorderDash: [2]
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update Traffic Chart with new period data
+        function updateTrafficChart(period) {
+            $.ajax({
+                url: `/api/time-stats/views/${period}`,
+                method: 'GET',
+                success: function(data) {
+                    // Update chart with new data
+                    trafficChart.data.labels = data.labels;
+                    trafficChart.data.datasets[0].data = data.data;
+                    trafficChart.update();
+                },
+                error: function(error) {
+                    console.error('Error fetching traffic data:', error);
+                    alert('Không thể tải dữ liệu lượt xem');
+                }
+            });
+        }
+        
+        // Update User Growth Chart with new period data
+        function updateUserGrowthChart(period) {
+            $.ajax({
+                url: `/api/time-stats/user-growth/${period}`,
+                method: 'GET',
+                success: function(data) {
+                    // Update chart with new data
+                    userGrowthChart.data.labels = data.labels;
+                    userGrowthChart.data.datasets[0].data = data.data;
+                    userGrowthChart.update();
+                },
+                error: function(error) {
+                    console.error('Error fetching user growth data:', error);
+                    alert('Không thể tải dữ liệu tăng trưởng người dùng');
+                }
+            });
+        }
+        
+        // Update Top Manga Chart with custom date range
+        function updateTopMangaChart(dateRange) {
+            $.ajax({
+                url: '/api/time-stats/top-manga',
+                method: 'GET',
+                data: dateRange,
+                success: function(data) {
+                    // Prepare data for chart
+                    const mangaTitles = [];
+                    const viewCounts = [];
+                    
+                    // Get top 10 manga or less
+                    const mangaCount = Math.min(data.length, 10);
+                    
+                    // Process data in reverse order (for horizontal bar chart)
+                    for (let i = 0; i < mangaCount; i++) {
+                        const manga = data[i];
+                        mangaTitles.push(manga.title.length > 20 ? manga.title.substring(0, 20) + '...' : manga.title);
+                        viewCounts.push(manga.viewCount);
+                    }
+                    
+                    // Reverse arrays to have highest at top
+                    mangaTitles.reverse();
+                    viewCounts.reverse();
+                    
+                    // Update chart with new data
+                    topMangaChart.data.labels = mangaTitles;
+                    topMangaChart.data.datasets[0].data = viewCounts;
+                    topMangaChart.update();
+                    
+                    // Also update the table
+                    updateTopMangaTable(data);
+                },
+                error: function(error) {
+                    console.error('Error fetching top manga data:', error);
+                    alert('Không thể tải dữ liệu truyện xem nhiều nhất');
+                }
+            });
+        }
+        
+        // Update all charts with custom date range
+        function updateAllChartsWithCustomRange(startDate, endDate) {
+            const dateRange = {
+                start: startDate,
+                end: endDate
+            };
+            
+            // Update top manga chart with custom range
+            updateTopMangaChart(dateRange);
+            
+            // For traffic and user growth, we'll use the closest period
+            const dayDiff = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24);
+            let period = 'month'; // default
+            
+            if (dayDiff <= 1) {
+                period = 'day';
+            } else if (dayDiff <= 7) {
+                period = 'week';
+            } else if (dayDiff <= 31) {
+                period = 'month';
+            } else {
+                period = 'year';
+            }
+            
+            // Update other charts based on estimated period
+            updateTrafficChart(period);
+            updateUserGrowthChart(period);
+        }
+        
+        // Update the top manga table with new data
+        function updateTopMangaTable(data) {
+            const tableBody = $('#topMangaTable tbody');
+            tableBody.empty();
+            
+            if (data && data.length > 0) {
+                data.forEach((manga, index) => {
+                    tableBody.append(`
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    ${manga.coverUrl 
+                                        ? `<img src="${manga.coverUrl}" alt="Cover" width="40" height="56" class="me-2" style="object-fit: cover;">`
+                                        : `<img src="/images/default-cover.jpg" alt="Cover" width="40" height="56" class="me-2" style="object-fit: cover;">`
+                                    }
+                                    <div>
+                                        <div>${manga.title}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${manga.viewCount.toLocaleString()}</td>
+                            <td>
+                                <a href="/admin/manga/${manga.mangaId}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    `);
+                });
+            } else {
+                tableBody.append(`
+                    <tr>
+                        <td colspan="4" class="text-center">Không có dữ liệu</td>
+                    </tr>
+                `);
+            }
+        }
+        
+        // Helper function to get date range based on period
+        function getDateRangeFromPeriod(period) {
+            const endDate = new Date();
+            let startDate = new Date();
+            
+            switch (period) {
+                case 'day':
+                    startDate.setDate(endDate.getDate() - 1);
+                    break;
+                case 'week':
+                    startDate.setDate(endDate.getDate() - 7);
+                    break;
+                case 'month':
+                    startDate.setDate(endDate.getDate() - 30);
+                    break;
+                case 'year':
+                    startDate.setFullYear(endDate.getFullYear() - 1);
+                    break;
+                default:
+                    startDate.setDate(endDate.getDate() - 30); // Default to month
+            }
+            
+            return {
+                start: startDate.toISOString().split('T')[0],
+                end: endDate.toISOString().split('T')[0]
+            };
+        }
+    </script>
+}

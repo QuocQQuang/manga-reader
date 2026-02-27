@@ -1,0 +1,265 @@
+@model List<Mangareading.Models.Manga>
+@{
+    ViewData["Title"] = "Quản Lý Truyện";
+    Layout = "_AdminLayout";
+}
+
+<div class="manga-management-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Quản Lý Truyện</h1>
+            <p class="text-muted">Tổng số: @Model.Count truyện</p>
+        </div>
+        <div class="d-flex">
+            <div class="search-box me-2">
+                <input type="text" id="adminSearch" class="form-control" placeholder="Tìm kiếm truyện...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+            <div class="btn-group">
+                <a href="/MangaUpload/CreateManga" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-1"></i> Thêm Truyện Mới
+                </a>
+                <a href="/MangaUpload/ManageManga" class="btn btn-info">
+                    <i class="fas fa-book me-1"></i> Quản Lý Truyện Đã Tải
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card data-table">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Danh Sách Truyện</h6>
+            <div class="d-flex align-items-center">
+                <div class="dropdown me-2">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-filter me-1"></i> Lọc
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="filterDropdown">
+                        <li><a class="dropdown-item active" href="#" data-filter="all">Tất cả truyện</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="completed">Đã hoàn thành</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="ongoing">Đang tiến hành</a></li>
+                        <li><a class="dropdown-item" href="#" data-filter="most-viewed">Nhiều lượt xem nhất</a></li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+        <div class="card-body">
+            @if(Model.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Ảnh bìa</th>
+                                <th>Tên truyện</th>
+                                <th>Số chương</th>
+                                <th>Lượt xem</th>
+                                <th>Cập nhật</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var manga in Model)
+                            {
+                                <tr data-status="@manga.Status?.ToLower()">
+                                    <td>@manga.MangaId</td>
+                                    <td>
+                                        <img src="@manga.CoverUrl" alt="@manga.Title" width="50" height="70"
+                                             style="object-fit: cover; border-radius: 4px;"
+                                             onerror="this.src='/images/no-cover.png'">
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>@manga.Title</strong>
+                                            <div class="small text-muted">@manga.Status</div>
+                                        </div>
+                                    </td>
+                                    <td>@(manga.ChapterCount ?? 0)</td>
+                                    <td>@manga.ViewCount</td>
+                                    <td>@manga.UpdatedAt.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <div class="d-flex">
+                                            <a href="/admin/manga/@manga.MangaId" class="btn btn-sm btn-primary me-1" title="Chỉnh sửa thông tin truyện">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="/manga/@manga.MangaId" target="_blank" class="btn btn-sm btn-info me-1" title="Xem trang truyện">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <div class="dropdown d-inline-block me-1">
+                                                <button class="btn btn-sm btn-success dropdown-toggle" type="button" id="chapterDropdown@(manga.MangaId)" data-bs-toggle="dropdown" aria-expanded="false" title="Quản lý chương">
+                                                    <i class="fas fa-file-alt"></i>
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="chapterDropdown@(manga.MangaId)">
+                                                    @if (manga.Chapters != null && manga.Chapters.Any())
+                                                    {
+                                                        foreach (var chapter in manga.Chapters.OrderByDescending(c => c.ChapterNumber).Take(5))
+                                                        {
+                                                            <li><a class="dropdown-item" href="/MangaUpload/ManagePages/@chapter.ChapterId">Chương @chapter.ChapterNumber</a></li>
+                                                        }
+                                                        if (manga.Chapters.Count > 5)
+                                                        {
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li><a class="dropdown-item" href="/MangaUpload/ManageManga">Xem tất cả chương</a></li>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <li><a class="dropdown-item disabled" href="#">Chưa có chương</a></li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                            <button type="button" class="btn btn-sm btn-danger btn-delete-manga"
+                                                    data-manga-id="@manga.MangaId" data-manga-title="@manga.Title" title="Xóa truyện">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- No Results Message -->
+                <div class="text-center py-5 no-results" style="display: none;">
+                    <i class="fas fa-book fa-4x text-muted mb-3"></i>
+                    <h5>Không tìm thấy truyện nào</h5>
+                    <p class="text-muted">Không có truyện nào phù hợp với bộ lọc đã chọn.</p>
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Trước</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-book fa-4x text-muted mb-3"></i>
+                    <h5>Không tìm thấy truyện nào</h5>
+                    <p class="text-muted">Không có truyện nào phù hợp với tiêu chí tìm kiếm.</p>
+                    <div class="mt-3">
+                        <a href="/MangaUpload/CreateManga" class="btn btn-primary me-2">
+                            <i class="fas fa-plus-circle me-1"></i> Thêm Truyện Mới
+                        </a>
+                        <a href="/MangaUpload/ManageManga" class="btn btn-info">
+                            <i class="fas fa-book me-1"></i> Quản Lý Truyện Đã Tải
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Delete Manga Confirmation Modal -->
+<div class="modal fade" id="deleteMangaModal" tabindex="-1" aria-labelledby="deleteMangaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteMangaModalLabel">Xác Nhận Xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa truyện <strong id="mangaTitleToDelete"></strong>?</p>
+                <p class="text-danger">Thao tác này không thể hoàn tác.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="deleteMangaForm" method="post" action="/admin/manga/delete">
+                    <input type="hidden" id="mangaIdToDelete" name="mangaId" value="" />
+                    <button type="submit" class="btn btn-danger">Xóa Truyện</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Handle delete manga confirmation
+        $('.btn-delete-manga').on('click', function() {
+            const mangaId = $(this).data('manga-id');
+            const mangaTitle = $(this).data('manga-title');
+
+            $('#mangaIdToDelete').val(mangaId);
+            $('#mangaTitleToDelete').text(mangaTitle);
+            $('#deleteMangaModal').modal('show');
+        });
+
+        // Handle search functionality
+        $('#adminSearch').on('keyup', function() {
+            const searchTerm = $(this).val().toLowerCase();
+
+            $('table.admin-table tbody tr').each(function() {
+                const title = $(this).find('td:nth-child(3)').text().toLowerCase();
+                const id = $(this).find('td:nth-child(1)').text().toLowerCase();
+
+                if (title.includes(searchTerm) || id.includes(searchTerm)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            // Show/hide no results message
+            const visibleRows = $('table.admin-table tbody tr:visible').length;
+            if (visibleRows === 0) {
+                $('.no-results').show();
+                $('nav.pagination').hide();
+            } else {
+                $('.no-results').hide();
+                $('nav.pagination').show();
+            }
+        });
+
+        // Handle filter dropdown
+        $('.dropdown-item[data-filter]').on('click', function(e) {
+            e.preventDefault();
+
+            // Update active state
+            $('.dropdown-item[data-filter]').removeClass('active');
+            $(this).addClass('active');
+
+            const filter = $(this).data('filter');
+
+            // Show all rows first
+            $('table.admin-table tbody tr').show();
+
+            // Apply filter
+            if (filter !== 'all') {
+                $('table.admin-table tbody tr').each(function() {
+                    if (filter === 'completed' && $(this).data('status') !== 'hoàn thành') {
+                        $(this).hide();
+                    } else if (filter === 'ongoing' && $(this).data('status') !== 'đang tiến hành') {
+                        $(this).hide();
+                    } else if (filter === 'most-viewed') {
+                        // This would require server-side sorting, but we'll leave it for now
+                    }
+                });
+            }
+
+            // Show/hide no results message
+            const visibleRows = $('table.admin-table tbody tr:visible').length;
+            if (visibleRows === 0) {
+                $('.no-results').show();
+                $('nav.pagination').hide();
+            } else {
+                $('.no-results').hide();
+                $('nav.pagination').show();
+            }
+        });
+    </script>
+}

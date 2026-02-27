@@ -1,0 +1,325 @@
+@model Mangareading.ViewModels.MangaEditViewModel
+@{
+    ViewData["Title"] = "Chỉnh sửa truyện: " + Model.Manga.Title;
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+
+    <form id="editMangaForm" asp-controller="Api/MangaUpload" asp-action="UpdateManga" asp-route-id="@Model.Manga.MangaId" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Manga.MangaId" />
+
+        <div class="row">
+            <!-- Left Column: Cover Image and Basic Info -->
+            <div class="col-md-4">
+                <div class="mb-3 position-relative">
+                    <label class="form-label">Ảnh bìa</label>
+                    <div class="cover-image-container mb-2 text-center">
+                        <img id="coverPreview" 
+                             src="@(string.IsNullOrEmpty(Model.Manga.CoverUrl) ? "/images/no-cover.png" : Model.Manga.CoverUrl)" 
+                             alt="Ảnh bìa" 
+                             class="img-thumbnail" 
+                             style="max-height: 400px; max-width: 100%; cursor: pointer;" 
+                             onerror="this.onerror=null; this.src='/images/no-cover.png';"/>
+                        <label for="coverFile" class="edit-cover-icon btn btn-light btn-sm position-absolute bottom-0 end-0 m-2" title="Thay đổi ảnh bìa">
+                            <i class="fas fa-pencil-alt"></i>
+                        </label>
+                    </div>
+                    <input type="file" id="coverFile" name="CoverFile" class="form-control d-none" accept="image/jpeg, image/png, image/gif" />
+                    <small class="form-text text-muted">Tối đa 10MB (JPG, PNG, GIF).</small>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Manga.Status" class="form-label">Trạng thái</label>
+                    <select asp-for="Manga.Status" name="Status" class="form-select">
+                        <option value="Ongoing">Đang tiến hành</option>
+                        <option value="Completed">Đã hoàn thành</option>
+                        <option value="Hiatus">Tạm dừng</option>
+                        <option value="Cancelled">Đã hủy</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Manga.PublicationYear" class="form-label">Năm phát hành</label>
+                    <input type="number" asp-for="Manga.PublicationYear" name="PublicationYear" class="form-control" min="1900" max="@DateTime.Now.Year" />
+                </div>
+            </div>
+
+            <!-- Right Column: Details and Genres -->
+            <div class="col-md-8">
+                <div class="mb-3">
+                    <label asp-for="Manga.Title" class="form-label">Tiêu đề</label>
+                    <input type="text" asp-for="Manga.Title" name="Title" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Manga.AlternativeTitle" class="form-label">Tiêu đề thay thế</label>
+                    <input type="text" asp-for="Manga.AlternativeTitle" name="AlternativeTitle" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Manga.Author" class="form-label">Tác giả</label>
+                    <input type="text" asp-for="Manga.Author" name="Author" class="form-control" required/>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Manga.Artist" class="form-label">Họa sĩ</label>
+                    <input type="text" asp-for="Manga.Artist" name="Artist" class="form-control" required/>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Manga.Description" class="form-label">Mô tả</label>
+                    <textarea asp-for="Manga.Description" name="Description" class="form-control" rows="5"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Thể loại</label>
+                    <div class="genre-checkbox-list border p-2 rounded" style="max-height: 200px; overflow-y: auto;">
+                        <div class="row">
+                            @foreach (var genre in Model.AllGenres)
+                            {
+                                var isChecked = Model.Manga.MangaGenres?.Any(mg => mg.GenreId == genre.GenreId) ?? false;
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="GenreIds" value="@genre.GenreId" id="genre_@genre.GenreId" @(isChecked ? "checked" : "")>
+                                        <label class="form-check-label" for="genre_@genre.GenreId">
+                                            @genre.GenreName
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Chapters Section -->
+        <div class="mb-4">
+            <h4>Chapters</h4>
+            <a asp-action="ManagePages" asp-controller="MangaUpload" asp-route-chapterId="" class="btn btn-success btn-sm mb-2 disabled" id="addChapterBtn_Direct">
+                <i class="fas fa-plus"></i> Thêm Chapter Mới (Lưu thay đổi trước)
+            </a>
+            <p><small>Lưu thay đổi truyện trước khi thêm/quản lý chapter.</small></p>
+
+            @if (Model.Chapters.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Chapter</th>
+                                <th>Tiêu đề</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var chapter in Model.Chapters)
+                            {
+                                <tr>
+                                    <td>@chapter.ChapterNumber</td>
+                                    <td>@chapter.Title</td>
+                                    <td>@chapter.UploadDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="ManagePages" asp-controller="MangaUpload" asp-route-chapterId="@chapter.ChapterId" class="btn btn-outline-info" title="Quản lý trang">
+                                                <i class="fas fa-images"></i>
+                                            </a>
+                                            <!-- Add Edit/Delete Chapter buttons here if needed, potentially opening modals or linking to separate pages -->
+                                            <button type="button" class="btn btn-outline-danger" onclick="deleteChapter(@chapter.ChapterId, @Model.Manga.MangaId)" title="Xóa Chapter">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">Truyện này chưa có chapter nào.</div>
+            }
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary" id="saveChangesBtn">
+                <i class="fas fa-save"></i> Lưu thay đổi
+            </button>
+            <a asp-action="ManageManga" class="btn btn-secondary">Quay lại danh sách</a>
+        </div>
+    </form>
+</div>
+
+<!-- Delete Confirmation Modal (Reuse or create new if needed) -->
+<div class="modal fade" id="deleteChapterConfirmModal" tabindex="-1" aria-labelledby="deleteChapterConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteChapterConfirmModalLabel">Xác nhận xóa Chapter</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa chapter này không? Hành động này không thể hoàn tác.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmChapterDeleteBtn">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Trigger file input when clicking the cover image or edit icon
+            $('#coverPreview, .edit-cover-icon').on('click', function () {
+                $('#coverFile').click();
+            });
+
+            // Show preview of selected cover image
+            $('#coverFile').on('change', function (event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        $('#coverPreview').attr('src', e.target.result);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Handle form submission with AJAX
+            $('#editMangaForm').on('submit', function (e) {
+                e.preventDefault(); // Prevent default form submission
+
+                var formData = new FormData(this);
+                var mangaId = $("#Manga_MangaId").val();
+                var token = $('input[name="__RequestVerificationToken"]').val();
+
+                $.ajax({
+                    url: `/api/manga-upload/${mangaId}/info`, // Use the API endpoint URL
+                    type: 'PUT', // Use PUT for update
+                    data: formData,
+                    processData: false, // Prevent jQuery from processing the data
+                    contentType: false, // Prevent jQuery from setting contentType
+                    headers: {
+                        'RequestVerificationToken': token
+                    },
+                    beforeSend: function () {
+                        $('#saveChangesBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang lưu...');
+                    },
+                    success: function (response) {
+                        showToast(response.message || 'Cập nhật truyện thành công!', 'success');
+                        // Optionally redirect or update UI
+                        // Example: Redirect back after a short delay
+                        setTimeout(function() {
+                             window.location.href = '@Url.Action("ManageManga", "MangaUpload")';
+                        }, 1500);
+                    },
+                    error: function (xhr) {
+                        showToast(errorMessage, 'error');
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            showToast(errorMessage, 'error');
+                        } else if (xhr.responseText) {
+                            try {
+                                const errorObj = JSON.parse(xhr.responseText);
+                                if (errorObj.errors) {
+                                    // Handle validation errors (more complex UI needed)
+                                    errorMessage = "Lỗi dữ liệu: " + Object.values(errorObj.errors).flat().join(' ');
+                                } else if (errorObj.message) {
+                                    errorMessage = errorObj.message;
+                                }
+                            } catch (e) { /* Ignore parsing error */ }
+                        }
+                        showToast(errorMessage, 'error');
+                    },
+                    complete: function () {
+                        $('#saveChangesBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Lưu thay đổi');
+                    }
+                });
+            });
+
+            // Enable Add Chapter button after initial load (assuming manga exists)
+            if ($("#Manga_MangaId").val() > 0) {
+                 $('#addChapterBtn_Direct').removeClass('disabled')
+                                        .attr('href', '@Url.Action("CreateChapter", "MangaUpload", new { mangaId = Model.Manga.MangaId })'); // Need CreateChapter action
+                 // Or trigger a modal similar to ManageManga
+            }
+        });
+
+        let chapterToDeleteId = 0;
+        let mangaIdForChapterDelete = 0;
+
+        function deleteChapter(chapterId, mangaId) {
+            chapterToDeleteId = chapterId;
+            mangaIdForChapterDelete = mangaId; // Store mangaId if needed for reload/update
+            var modal = new bootstrap.Modal(document.getElementById('deleteChapterConfirmModal'));
+            modal.show();
+        }
+
+        $('#confirmChapterDeleteBtn').on('click', function() {
+            if (chapterToDeleteId > 0) {
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                $.ajax({
+                    url: `/api/manga-upload/chapter/${chapterToDeleteId}`,
+                    type: 'DELETE',
+                    headers: {
+                        'RequestVerificationToken': token
+                    },
+                    beforeSend: function () {
+                        $('#confirmChapterDeleteBtn').prop('disabled', true).text('Đang xóa...');
+                    },
+                    success: function(response) {
+                        showToast(response.message || 'Xóa chapter thành công!', 'success');
+                        // Remove the row from the table or reload the page/section
+                        $(`a[asp-route-chapterId='${chapterToDeleteId}']`).closest('tr').remove();
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('deleteChapterConfirmModal'));
+                        modal.hide();
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'Lỗi khi xóa chapter.';
+                         if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        showToast(errorMessage, 'error');
+                    },
+                    complete: function() {
+                         $('#confirmChapterDeleteBtn').prop('disabled', false).text('Xóa');
+                         chapterToDeleteId = 0; // Reset ID
+                    }
+                });
+            }
+        });
+
+        // Function to show toast messages (ensure this function exists)
+        function showToast(message, type = 'info') {
+            // Replace with your actual toast library call, e.g., toastr[type](message);
+            console.log(`Toast (${type}): ${message}`);
+            if (typeof toastr !== 'undefined') {
+                toastr[type](message);
+            } else {
+                alert(`[${type.toUpperCase()}] ${message}`);
+            }
+        }
+    </script>
+}
+
+<style>
+    .cover-image-container {
+        /* Add styles if needed */
+    }
+    .edit-cover-icon {
+        cursor: pointer;
+    }
+    .genre-checkbox-list {
+        background-color: #f8f9fa; /* Light background for contrast */
+    }
+</style>

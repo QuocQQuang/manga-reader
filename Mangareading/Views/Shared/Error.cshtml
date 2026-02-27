@@ -1,0 +1,15 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Lỗi";
+
+    ViewBag.StatusCode = Model?.StatusCode ?? 500;
+    ViewBag.ErrorTitle = "Lỗi hệ thống";
+    ViewBag.ErrorIcon = "fas fa-exclamation-circle";
+    ViewBag.ErrorMessage = "Đã xảy ra lỗi!";
+    ViewBag.ErrorDescription = Model?.Message ?? "Đã xảy ra lỗi trong khi xử lý yêu cầu của bạn. Vui lòng thử lại sau.";
+    ViewBag.ErrorImage = "/images/500.svg";
+    ViewBag.ErrorClass = "error-" + (Model?.StatusCode ?? 500);
+    ViewBag.AlertType = "danger";
+}
+
+@await Html.PartialAsync("_ErrorLayout", Model)

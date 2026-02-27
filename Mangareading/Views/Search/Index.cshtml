@@ -1,0 +1,116 @@
+@{
+    ViewBag.Title = "Search";
+}
+
+<h2>Search</h2>
+
+<div class="search-container">
+    <form id="search-form" action="@Url.Action("Results", "Search")" method="get">
+        <div class="main-search">
+            <input type="text" id="search-box" name="query" placeholder="Nhập tên truyện..." class="form-control" />
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            <a href="@Url.Action("Advanced", "Search")" class="btn btn-outline-secondary">Tìm kiếm nâng cao</a>
+        </div>
+        <div id="search-results" class="auto-complete-results" style="display: none;"></div>
+    </form>
+</div>
+
+<div class="trending-section mt-4">
+    <h3>Truyện hot</h3>
+    <div class="row">
+        <!-- Placeholder for trending manga, could be populated via AJAX or server-side -->
+        <p>Đang tải truyện hot...</p>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .main-search {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .auto-complete-results {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 600px;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .auto-complete-results div {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .auto-complete-results div:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("#search-box").on("input", function() {
+                var term = $(this).val();
+                if (term.length > 0) {
+                    $.ajax({
+                        url: '@Url.Action("AutoComplete", "Search")',
+                        data: { term: term },
+                        success: function(data) {
+                            var results = $("#search-results");
+                            results.empty();
+                            if (data.length > 0) {
+                                results.show();
+                                $.each(data, function(index, item) {
+                                    results.append(
+                                        $("<div>")
+                                            .html(item.value)
+                                            .data("id", item.id)
+                                            .click(function() {
+                                                window.location.href = "@Url.Action("Details", "Manga")/" + $(this).data("id");
+                                            })
+                                    );
+                                });
+                            } else {
+                                results.hide();
+                            }
+                        }
+                    });
+                } else {
+                    $("#search-results").hide();
+                }
+            });
+
+            // Close autocomplete when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.search-container').length) {
+                    $("#search-results").hide();
+                }
+            });
+
+            // Load trending manga via AJAX
+            $.ajax({
+                url: '@Url.Action("Results", "Search")', 
+                data: { sortBy: 'popularity', page: 1 },
+                success: function(data) {
+                    // This would require a partial view to render the results
+                    // For now, we'll just show a message
+                    $(".trending-section .row").html("<p>Chức năng này sẽ được cập nhật sau.</p>");
+                }
+            });
+        });
+    </script>
+}

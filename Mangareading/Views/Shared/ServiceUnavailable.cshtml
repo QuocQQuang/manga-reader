@@ -1,0 +1,35 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Dịch vụ không khả dụng";
+
+    ViewBag.StatusCode = 503;
+    ViewBag.ErrorTitle = "503 - Dịch vụ không khả dụng";
+    ViewBag.ErrorIcon = "fas fa-tools";
+    ViewBag.ErrorMessage = "Dịch vụ tạm thời không khả dụng!";
+    ViewBag.ErrorDescription = "Máy chủ hiện đang quá tải hoặc đang được bảo trì. Vui lòng thử lại sau vài phút.";
+    ViewBag.ErrorImage = "/images/503.svg";
+    ViewBag.ErrorClass = "error-503";
+    ViewBag.AlertType = "warning";
+
+    var customButtons = $@"<a href='/' class='btn btn-primary error-btn error-btn-primary'>
+        <i class='fas fa-home me-2'></i> Về Trang Chủ
+    </a>
+    <a href='javascript:history.back()' class='btn btn-outline-secondary error-btn error-btn-secondary'>
+        <i class='fas fa-arrow-left me-2'></i> Quay Lại
+    </a>
+    <button id='refreshButton' class='btn btn-outline-success error-btn'>
+        <i class='fas fa-sync-alt me-2'></i> Tải Lại
+    </button>";
+
+    ViewBag.CustomButtons = customButtons;
+}
+
+@await Html.PartialAsync("_ErrorLayout", Model)
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('refreshButton').addEventListener('click', function() {
+            location.reload();
+        });
+    });
+</script>

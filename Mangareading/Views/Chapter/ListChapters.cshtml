@@ -1,0 +1,415 @@
+﻿@model List<Chapter>
+@{
+    var manga = ViewBag.Manga as Manga;
+    ViewData["Title"] = $"Chapter - {manga?.Title}";
+
+    // Phân trang
+    int pageSize = 20;
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = (int)Math.Ceiling(Model.Count / (double)pageSize);
+    var paginatedChapters = Model.OrderByDescending(c => c.ChapterNumber)
+                                 .Skip((currentPage - 1) * pageSize)
+                                 .Take(pageSize);
+
+    // Cập nhật thời gian và người dùng theo yêu cầu
+    var currentDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+    var currentUser = User.Identity?.Name ?? "Anon";
+}
+
+<div class="progress position-fixed top-0 w-100" style="height: 3px; z-index: 1100;">
+    <div id="scrollProgress" class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+</div>
+
+<div class="container py-4 animate-on-scroll">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i> Trang Chủ</a></li>
+            <li class="breadcrumb-item"><a href="/manga">Danh Sách Truyện</a></li>
+            <li class="breadcrumb-item"><a href="/manga/@manga.MangaId">@manga.Title</a></li>
+            <li class="breadcrumb-item active">Danh Sách Chapter</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-4 col-lg-3 mb-4">
+            <div class="card h-100 shadow-sm border-0 animate-on-scroll">
+                <div class="position-relative">
+                    <img src="@manga.CoverUrl" class="card-img-top" alt="@manga.Title"
+                         onerror="this.onerror=null; this.src='/images/no-cover.png';">
+
+                    <div class="position-absolute top-0 end-0 m-2">
+                        <button class="btn btn-sm btn-primary rounded-circle shadow" data-bs-toggle="tooltip" title="Thêm vào tủ truyện">
+                            <i class="fas fa-bookmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">@manga.Title</h5>
+                    <p class="card-text text-muted small">
+                        <i class="fas fa-user me-1"></i> @manga.Author
+                    </p>
+
+                    <div class="d-flex gap-2 flex-wrap mb-2">
+                        <span class="badge bg-primary">
+                            <i class="fas fa-book-open me-1"></i> @Model.Count chapters
+                        </span>
+                        <span class="badge @(manga.Status == "ongoing" ? "bg-success" : "bg-secondary")">
+                            @(manga.Status == "ongoing" ? "Đang tiếp tục" : "Hoàn thành")
+                        </span>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="/manga/@manga.MangaId" class="btn btn-outline-primary">
+                            <i class="fas fa-info-circle me-1"></i> Chi Tiết Truyện
+                        </a>
+
+                        <form method="post" action="/chapter/sync/@manga.MangaId" class="d-grid">
+                            <button type="submit" class="btn btn-info text-white">
+                                <i class="fas fa-sync-alt me-1"></i> Đồng Bộ Chapter
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-muted">
+                            <i class="fas fa-clock me-1"></i> Cập nhật: @currentDateTime.Substring(0, 10)
+                        </span>
+                        <span class="badge bg-light text-dark">
+                            <i class="fas fa-eye me-1"></i> 1,245
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 col-lg-9">
+            @if (ViewBag.NewChapterCount > 0)
+            {
+                <div class="alert alert-success mb-4 shadow-sm border-0 animate-on-scroll">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-sync-alt fa-spin me-2"></i>
+                        <strong>Đã tìm thấy @ViewBag.NewChapterCount chapter mới!</strong>
+                        <small class="ms-auto">Danh sách đã được cập nhật tự động</small>
+                    </div>
+                </div>
+            }
+
+            <div class="card mb-4 shadow-sm border-0 animate-on-scroll" id="chapter-list">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-book me-2 text-primary"></i>
+                        Danh Sách Chapter
+                    </h4>
+                    <span class="badge bg-primary rounded-pill">@Model.Count chapters</span>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="p-3 border-bottom">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <div class="d-flex gap-2">
+                                    @if (Model.Any())
+                                    {
+                                        <a href="/chapter/read/@Model.OrderBy(c => c.ChapterNumber).First().ChapterId" class="btn btn-success">
+                                            <i class="fas fa-book-open me-1"></i> Đọc từ đầu
+                                        </a>
+                                        <a href="/chapter/read/@Model.OrderByDescending(c => c.ChapterNumber).First().ChapterId" class="btn btn-primary">
+                                            <i class="fas fa-star me-1"></i> Đọc mới nhất
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="fas fa-search text-primary"></i></span>
+                                    <input type="text" id="chapterFilter" class="form-control" placeholder="Tìm chapter...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="noChapterResults" class="text-center py-4 d-none">
+                        <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                        <p>Không tìm thấy chapter nào khớp với tìm kiếm của bạn.</p>
+                    </div>
+
+                    @if (Model.Any())
+                    {
+                        <style>
+                            .chapter-table {
+                                width: 100%;
+                                table-layout: fixed !important;
+                                border-collapse: collapse;
+                            }
+                            .chapter-table th, .chapter-table td {
+                                padding: 0.75rem;
+                                vertical-align: middle;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                            }
+                            .chapter-table th:nth-child(1), .chapter-table td:nth-child(1) {
+                                width: 15% !important;
+                            }
+                            .chapter-table th:nth-child(2), .chapter-table td:nth-child(2) {
+                                width: 40% !important;
+                            }
+                            .chapter-table th:nth-child(3), .chapter-table td:nth-child(3) {
+                                width: 15% !important;
+                                text-align: center;
+                            }
+                            .chapter-table th:nth-child(4), .chapter-table td:nth-child(4) {
+                                width: 15% !important;
+                                text-align: center;
+                            }
+                            .chapter-table th:nth-child(5), .chapter-table td:nth-child(5) {
+                                width: 15% !important;
+                                text-align: center;
+                            }
+                        </style>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped mb-0 chapter-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Chapter</th>
+                                        <th>Tiêu đề</th>
+                                        <th class="text-center">Ngôn ngữ</th>
+                                        <th class="text-center">Ngày tải</th>
+                                        <th class="text-center">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var chapter in paginatedChapters)
+                                    {
+                                        <tr class="chapter-item">
+                                            <td>
+                                                <span class="bg-primary text-white rounded-pill px-3 py-1 fw-bold">
+                                                    @chapter.ChapterNumber.ToString("0")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="/chapter/read/@chapter.ChapterId" class="text-decoration-none">
+                                                    @if (!string.IsNullOrEmpty(chapter.Title))
+                                                    {
+                                                        <span>@chapter.Title</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>Chapter @chapter.ChapterNumber</span>
+                                                    }
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark">@chapter.LanguageCode</span>
+                                            </td>
+                                            <td>
+                                                <span data-bs-toggle="tooltip" title="@chapter.UploadDate.ToString("yyyy-MM-dd HH:mm:ss")">
+                                                    @chapter.UploadDate.ToString("dd/MM/yyyy")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="/chapter/read/@chapter.ChapterId" class="btn btn-sm btn-primary rounded-pill">
+                                                    <i class="fas fa-book-reader me-1"></i> Đọc
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Phân trang -->
+                        @if (totalPages > 1)
+                        {
+                            <div class="d-flex justify-content-center mt-4 pb-3">
+                                <nav aria-label="Chapter pagination">
+                                    <ul class="pagination pagination-sm">
+                                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                            <a class="page-link" href="?page=1#chapter-list" aria-label="First">
+                                                <i class="fas fa-angle-double-left"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                            <a class="page-link" href="?page=@(currentPage - 1)#chapter-list" aria-label="Previous">
+                                                <i class="fas fa-angle-left"></i>
+                                            </a>
+                                        </li>
+
+                                        @{
+                                            int startPage = Math.Max(1, currentPage - 2);
+                                            int endPage = Math.Min(totalPages, startPage + 4);
+
+                                            if (endPage - startPage < 4)
+                                            {
+                                                startPage = Math.Max(1, endPage - 4);
+                                            }
+                                        }
+
+                                        @for (int i = startPage; i <= endPage; i++)
+                                        {
+                                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                                <a class="page-link" href="?page=@i#chapter-list">@i</a>
+                                            </li>
+                                        }
+
+                                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                            <a class="page-link" href="?page=@(currentPage + 1)#chapter-list" aria-label="Next">
+                                                <i class="fas fa-angle-right"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                            <a class="page-link" href="?page=@totalPages#chapter-list" aria-label="Last">
+                                                <i class="fas fa-angle-double-right"></i>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                            <div class="text-center small text-muted pb-3">
+                                Hiển thị @(((currentPage - 1) * pageSize) + 1) - @(Math.Min(currentPage * pageSize, Model.Count)) của @Model.Count chapter
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="fas fa-book fa-3x text-muted"></i>
+                            </div>
+                            <h5>Không có chapter nào</h5>
+                            <p>Nhấn vào nút "Đồng Bộ Chapter" để tải chapter mới.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 animate-on-scroll">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>
+                        Thông tin
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-light">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="https://ui-avatars.com/api/?name=@currentUser&background=random&color=fff" width="32" height="32" class="rounded-circle me-2">
+                            <span class="fw-bold">@currentUser</span>
+                        </div>
+                        <p class="small mb-0">Tổng số chapter hiện có: <span class="fw-bold">@Model.Count</span></p>
+                        <p class="small mb-0">Cập nhật lần cuối: <span class="fw-bold">@currentDateTime (UTC)</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Nút Back To Top -->
+<button id="backToTopBtn" class="btn btn-primary rounded-circle position-fixed" style="bottom: 20px; right: 20px; width: 45px; height: 45px; display: none; z-index: 1000;">
+    <i class="fas fa-arrow-up"></i>
+</button>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;"></div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Hiển thị thông báo số chapter đã tải
+        @if (ViewBag.NewChapterCount > 0)
+        {
+            <text>
+                    showToast('Đã tìm thấy @ViewBag.NewChapterCount chapter mới cho truyện "@manga.Title"', 'success');
+            </text>
+        }
+        else if (Model.Count > 0)
+        {
+            <text>
+                    showToast('Đã tải @Model.Count chapter cho truyện "@manga.Title"', 'info');
+            </text>
+        }
+
+            // Kiểm tra URL hash để scroll đến đúng vị trí
+            if (window.location.hash) {
+                var hash = window.location.hash;
+                $('html, body').animate({
+                    scrollTop: $(hash).offset().top - 70
+                }, 500);
+            }
+
+            // Lưu truyện đã xem vào localStorage
+            const recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+            const mangaData = {
+                id: @manga.MangaId,
+                title: '@manga.Title.Replace("'", "\'")',
+                coverUrl: '@(string.IsNullOrEmpty(manga.CoverUrl) ? "/images/no-cover.png" : manga.CoverUrl)',
+                timestamp: new Date().getTime()
+            };
+
+            // Kiểm tra nếu truyện đã tồn tại trong danh sách
+            const existingIndex = recentlyViewed.findIndex(item => item.id === mangaData.id);
+            if (existingIndex !== -1) {
+                recentlyViewed.splice(existingIndex, 1);
+            }
+
+            // Thêm truyện vào đầu danh sách
+            recentlyViewed.unshift(mangaData);
+
+            // Giới hạn danh sách chỉ lưu 10 truyện
+            if (recentlyViewed.length > 10) {
+                recentlyViewed.pop();
+            }
+
+            // Lưu lại vào localStorage
+            localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
+            
+            // Chức năng lọc chapter
+            $("#chapterFilter").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                var hasResults = false;
+                
+                $(".chapter-item").each(function() {
+                    var text = $(this).text().toLowerCase();
+                    var matches = text.indexOf(value) > -1;
+                    $(this).toggle(matches);
+                    if (matches) hasResults = true;
+                });
+                
+                // Hiển thị thông báo không tìm thấy nếu không có kết quả
+                $("#noChapterResults").toggleClass("d-none", hasResults);
+            });
+        });
+        
+        // Hàm hiển thị toast notification
+        function showToast(message, type) {
+            const toastId = 'toast-' + Date.now();
+            const toast = `
+                <div id="${toastId}" class="toast bg-${type === 'success' ? 'success' : 'primary'} text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="5000">
+                    <div class="toast-header">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} me-2 text-${type === 'success' ? 'success' : 'primary'}"></i>
+                        <strong class="me-auto">Thông báo</strong>
+                        <small>Bây giờ</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+            
+            $("#toastContainer").append(toast);
+            const toastElement = new bootstrap.Toast(document.getElementById(toastId));
+            toastElement.show();
+            
+            // Tự động xóa toast sau khi ẩn
+            $(`#${toastId}`).on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
+    </script>
+}

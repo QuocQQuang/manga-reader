@@ -1,0 +1,48 @@
+:root {
+    /* Light Theme Variables (Default) */
+    --primary-color: #6366f1;
+    --secondary-color: #4f46e5;
+    --accent-color: #7c3aed;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #3b82f6;
+    --dark-color: #1f2937;
+    --light-color: #f9fafb;
+    --bg-color: #f3f4f6;
+    --card-bg: #ffffff;
+    --text-color: #1f2937;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --navbar-bg: #ffffff;
+    --footer-bg: #ffffff;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --shadow-color-darker: rgba(0, 0, 0, 0.2);
+}
+
+/* Dark Theme Variables */
+[data-theme="dark"] {
+    --primary-color: #818cf8;
+    --secondary-color: #6366f1;
+    --accent-color: #8b5cf6;
+    --success-color: #34d399;
+    --danger-color: #f87171;
+    --warning-color: #fbbf24;
+    --info-color: #60a5fa;
+    --dark-color: #111827;
+    --light-color: #1f2937;
+    --bg-color: #111827;
+    --card-bg: #1f2937;
+    --text-color: #e5e7eb;
+    --text-muted: #9ca3af;
+    --border-color: #374151;
+    --navbar-bg: #1f2937;
+    --footer-bg: #1f2937;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --shadow-color-darker: rgba(0, 0, 0, 0.7);
+}
+
+/* Transition for smooth theme switching */
+.theme-transition {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+} 

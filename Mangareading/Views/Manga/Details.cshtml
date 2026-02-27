@@ -1,0 +1,604 @@
+@model Manga
+@{
+    ViewData["Title"] = Model.Title;
+    var chapters = ViewBag.Chapters as List<Chapter>;
+    var isAuthenticated = User.Identity.IsAuthenticated;
+    var lastReadChapter = ViewBag.LastReadChapter as ReadingHistory;
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Trang Chủ</a></li>
+            <li class="breadcrumb-item"><a href="/manga">Danh Sách Truyện</a></li>
+            <li class="breadcrumb-item active">@Model.Title</li>
+        </ol>
+    </nav>
+
+    <!-- Manga Info Card -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <!-- Left Column - Cover and Actions -->
+                <div class="col-md-3">
+                    <div class="position-relative mb-3">
+                        <img class="img-fluid rounded border w-100"
+                             src="@(string.IsNullOrEmpty(Model.CoverUrl) ? "/images/no-cover.png" : Model.CoverUrl)"
+                             alt="@Model.Title" loading="lazy" onerror="this.onerror=null; this.src='/images/no-cover.png';">
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        @if (isAuthenticated)
+                        {
+                            <div class="d-flex gap-2">
+                                <a href="https://www.facebook.com/sharer/sharer.php?u=@(Uri.EscapeDataString(Context.Request.Scheme + "://" + Context.Request.Host + Context.Request.Path))" 
+                                   target="_blank" class="btn btn-outline-primary flex-grow-1">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                                <button id="favorite-btn" class="btn btn-outline-secondary flex-grow-1" data-manga-id="@Model.MangaId">
+                                    <i class="fas fa-heart"></i> <span id="favorite-count">0</span>
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="d-flex gap-2">
+                                <a href="https://www.facebook.com/sharer/sharer.php?u=@(Uri.EscapeDataString(Context.Request.Scheme + "://" + Context.Request.Host + Context.Request.Path))" 
+                                   target="_blank" class="btn btn-outline-primary flex-grow-1">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                                <a href="/Account/Login" class="btn btn-outline-secondary flex-grow-1">
+                                    <i class="fas fa-heart"></i>
+                                </a>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between">
+                                <span><i class="fas fa-eye me-2"></i> Lượt xem:</span>
+                                <span id="view-count" class="fw-bold">@(ViewBag.ViewCount ?? 0)</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between">
+                                <span><i class="fas fa-heart me-2"></i> Yêu thích:</span>
+                                <span id="favorite-total" class="fw-bold">@(ViewBag.FavoriteCount ?? 0)</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between">
+                                <span><i class="fas fa-book me-2"></i> Số chapter:</span>
+                                <span class="fw-bold">@(Model.ChapterCount ?? 0)</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.OriginalLanguage))
+                            {
+                                <div class="list-group-item d-flex justify-content-between">
+                                    <span><i class="fas fa-language me-2"></i> Ngôn ngữ gốc:</span>
+                                    <span class="fw-bold">
+                                        @{
+                                            var langIcon = "fas fa-language";
+                                            var langText = Model.OriginalLanguage.ToLower();
+                                            
+                                            if (langText.Contains("jp") || langText.Contains("japanese") || langText.Contains("nhật"))
+                                            {
+                                                langIcon = "flag-icon flag-icon-jp";
+                                            }
+                                            else if (langText.Contains("en") || langText.Contains("english") || langText.Contains("anh"))
+                                            {
+                                                langIcon = "flag-icon flag-icon-us";
+                                            }
+                                            else if (langText.Contains("ko") || langText.Contains("korean") || langText.Contains("hàn"))
+                                            {
+                                                langIcon = "flag-icon flag-icon-kr";
+                                            }
+                                        }
+                                        <i class="@langIcon me-1"></i> @Model.OriginalLanguage
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Manga Details -->
+                <div class="col-md-9">
+                    <h1 class="mb-1">@Model.Title</h1>
+
+                    @if (!string.IsNullOrEmpty(Model.AlternativeTitle))
+                    {
+                        <div class="text-muted mb-3">@Model.AlternativeTitle</div>
+                    }
+
+                    <div class="mb-3">
+                        @foreach (var mg in Model.MangaGenres)
+                        {
+                            <a href="@Url.Action("Index", "Manga", new { genreId = mg.GenreId })" class="badge bg-light text-dark text-decoration-none me-1 mb-1">@mg.Genre.GenreName</a>
+                        }
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p>
+                                <strong><i class="fas fa-user me-2"></i>Tác giả:</strong>
+                                @if (!string.IsNullOrEmpty(Model.Author))
+                                {
+                                    <a href="@Url.Action("Index", "Manga", new { author = Model.Author })" class="author-link">
+                                        @Model.Author
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span>Không có thông tin</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p>
+                                <strong><i class="fas fa-paint-brush me-2"></i>Họa sĩ:</strong>
+                                @if (!string.IsNullOrEmpty(Model.Artist))
+                                {
+                                    <a href="@Url.Action("Index", "Manga", new { author = Model.Artist })" class="author-link">
+                                        @Model.Artist
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span>Không có thông tin</span>
+                                }
+                            </p>
+                        </div>
+
+                        <div class="col-md-6">
+                            <p>
+                                <strong><i class="fas fa-book-open me-2"></i>Tình trạng:</strong>
+                                <a href="@Url.Action("Index", "Manga", new { status = Model.Status })" class="text-decoration-none">
+                                    <span class="badge @(Model.Status == "ongoing" ? "bg-success" : "bg-primary")">
+                                        @(Model.Status == "ongoing" ? "Đang tiến hành" : (Model.Status == "completed" ? "Hoàn thành" : Model.Status))
+                                    </span>
+                                </a>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-calendar-alt me-2"></i>Ngày cập nhật:</strong> @Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title mb-2">Mô tả</h5>
+                            <p class="card-text">@(Model.Description ?? "Không có mô tả.")</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <a href="/chapter/list/@Model.MangaId" class="btn btn-primary">
+                            <i class="fas fa-list me-2"></i> Danh Sách Chapter
+                        </a>
+
+                        @if (chapters != null && chapters.Any())
+                        {
+                            <a href="/chapter/read/@chapters.OrderBy(c => c.ChapterNumber).First().ChapterId" class="btn btn-success">
+                                <i class="fas fa-book-open me-2"></i> Đọc Từ Đầu
+                            </a>
+
+                            <a href="/chapter/read/@chapters.OrderByDescending(c => c.ChapterNumber).First().ChapterId" class="btn btn-info">
+                                <i class="fas fa-book-reader"></i> Đọc Mới Nhất
+                            </a>
+
+                            @if (lastReadChapter != null)
+                            {
+                                <a href="/chapter/read/@lastReadChapter.ChapterId" class="btn btn-warning">
+                                    <i class="fas fa-bookmark me-2"></i> Tiếp Tục Đọc
+                                </a>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chapter List Section -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center bg-white">
+            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Danh sách chapter</h5>
+            <div class="d-flex gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-sort me-1"></i> Sắp xếp
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+                        <li><a class="dropdown-item sort-option active" data-sort="desc" href="#"><i class="fas fa-sort-numeric-down-alt me-1"></i> Mới nhất trước</a></li>
+                        <li><a class="dropdown-item sort-option" data-sort="asc" href="#"><i class="fas fa-sort-numeric-up me-1"></i> Cũ nhất trước</a></li>
+                    </ul>
+                </div>
+                <div class="input-group input-group-sm" style="width: 200px;">
+                    <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                    <input type="text" id="chapterSearch" class="form-control" placeholder="Tìm chapter...">
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            @if (chapters != null && chapters.Any())
+            {
+                <div class="chapter-list-container" style="max-height: 500px; overflow-y: auto;">
+                    <div class="list-group list-group-flush" id="chapterList">
+                        @foreach (var chapter in chapters.OrderByDescending(c => c.ChapterNumber))
+                        {
+                            <a href="/chapter/read/@chapter.ChapterId" class="list-group-item list-group-item-action chapter-item"
+                               data-chapter-id="@chapter.ChapterId" data-manga-id="@Model.MangaId" data-chapter-number="@chapter.ChapterNumber">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-file-alt text-primary me-2"></i>
+                                            Chapter @chapter.ChapterNumber.ToString(chapter.ChapterNumber % 1 == 0 ? "0" : "0.0")
+                                            @if (!string.IsNullOrEmpty(chapter.Title))
+                                            {
+                                                <span>: @chapter.Title</span>
+                                            }
+                                        </h6>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-light text-dark me-3">@chapter.LanguageCode</span>
+                                        <small class="text-muted">@chapter.UploadDate.ToString("dd/MM/yyyy")</small>
+                                    </div>
+                                </div>
+                            </a>
+                        }
+                    </div>
+
+                    <div id="noChapterResults" class="text-center py-4 d-none">
+                        <i class="fas fa-search fa-2x text-muted mb-2"></i>
+                        <p>Không tìm thấy chapter nào khớp với tìm kiếm của bạn.</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div id="chapter-loading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Đang tải danh sách chapter...</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-comment-alt me-2"></i>Bình luận</h5>
+            <ul class="nav nav-tabs card-header-tabs mt-2" id="commentTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="manga-comments-tab" data-bs-toggle="tab" data-bs-target="#manga-comments"
+                            type="button" role="tab" aria-controls="manga-comments" aria-selected="true">
+                        Bình luận truyện
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="chapter-comments-tab" data-bs-toggle="tab" data-bs-target="#chapter-comments"
+                            type="button" role="tab" aria-controls="chapter-comments" aria-selected="false">
+                        Bình luận chapter
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="commentTabsContent">
+                <!-- Manga Comments Tab -->
+                <div class="tab-pane fade show active" id="manga-comments" role="tabpanel" aria-labelledby="manga-comments-tab">
+                    @if (isAuthenticated)
+                    {
+                        <div class="mb-3">
+                            <textarea class="form-control" id="mangaCommentText" rows="3" placeholder="Viết bình luận của bạn về truyện..."></textarea>
+                            <div class="text-end mt-2">
+                                <button type="button" class="btn btn-primary" id="submitMangaComment" data-manga-id="@Model.MangaId">Gửi bình luận</button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Vui lòng <a href="/Account/Login">đăng nhập</a> để bình luận.
+                        </div>
+                    }
+
+                    <div id="mangaCommentsContainer" class="mt-4">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Đang tải bình luận...</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-3 d-none" id="loadMoreMangaComments">
+                        <button class="btn btn-outline-primary btn-sm" data-page="2" data-manga-id="@Model.MangaId">
+                            <i class="fas fa-sync me-2"></i> Xem thêm bình luận
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chapter Comments Tab -->
+                <div class="tab-pane fade" id="chapter-comments" role="tabpanel" aria-labelledby="chapter-comments-tab">
+                    <div id="chapterCommentsContainer" class="mt-2">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Đang tải bình luận chapter...</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-3 d-none" id="loadMoreChapterComments">
+                        <button class="btn btn-outline-primary btn-sm" data-page="2" data-manga-id="@Model.MangaId">
+                            <i class="fas fa-sync me-2"></i> Xem thêm bình luận chapter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Similar Manga Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-book me-2"></i>Truyện tương tự</h5>
+        </div>
+        <div class="card-body">
+            @if (ViewBag.SimilarMangas != null && ((List<Manga>)ViewBag.SimilarMangas).Any())
+            {
+                <div class="row g-3">
+                    @foreach (var similarManga in (List<Manga>)ViewBag.SimilarMangas)
+                    {
+                        <div class="col-lg-3 col-md-4 col-sm-6">
+                            <a href="/manga/details/@similarManga.MangaId" class="text-decoration-none">
+                                <div class="card h-100 manga-card">
+                                    <img class="card-img-top manga-cover"
+                                         src="@(string.IsNullOrEmpty(similarManga.CoverUrl) ? "/images/no-cover.png" : similarManga.CoverUrl)"
+                                         alt="@similarManga.Title" loading="lazy" onerror="this.onerror=null; this.src='/images/no-cover.png';">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-truncate mb-1">@similarManga.Title</h6>
+                                        <p class="card-text small text-muted mb-0">
+                                            @(similarManga.Author ?? "Không có thông tin")
+                                        </p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Đang tải truyện tương tự...</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Footer Info -->
+    <div class="d-flex justify-content-between align-items-center my-4 text-muted small">
+        <p class="mb-0">
+            Cập nhật lần cuối: @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+        </p>
+        <p class="mb-0">
+            Người đăng: @(ViewBag.UploaderName ?? "Admin")
+        </p>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/comments.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css">
+    <style>
+        .manga-cover {
+            aspect-ratio: 3/4;
+            object-fit: cover;
+        }
+
+        .manga-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .manga-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem var(--shadow-color-darker);
+        }
+
+        .chapter-item:hover {
+            background-color: var(--bg-color);
+        }
+
+        .spinner-border {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        /* Author link styling is now in theme-overrides.css */
+    </style>
+}
+@section Scripts {
+    <script src="/js/comments.js"></script>
+    <script>
+        // Set global variables for comments.js
+        const isAuthenticated = @(isAuthenticated ? "true" : "false");
+        const currentMangaId = @Model.MangaId; // Add the manga ID as a global variable
+        $(document).ready(function() {
+            const mangaId = @Model.MangaId;
+
+            // Comment handlers are in comments.js
+
+            // Tải lượt xem và lượt thích
+            loadMangaStats();
+
+            // Kiểm tra trạng thái yêu thích
+            @if (isAuthenticated)
+            {
+                <text>
+                checkFavoriteStatus();
+                </text>
+            }
+
+            // Chapter search functionality
+            $("#chapterSearch").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                var hasResults = false;
+
+                $(".chapter-item").each(function() {
+                    var text = $(this).text().toLowerCase();
+                    var matches = text.indexOf(value) > -1;
+                    $(this).toggle(matches);
+                    if (matches) hasResults = true;
+                });
+
+                // Show/hide no results message
+                $("#noChapterResults").toggleClass("d-none", hasResults);
+            });
+
+            // Chapter sorting functionality
+            $(".sort-option").click(function(e) {
+                e.preventDefault();
+
+                // Update active state
+                $(".sort-option").removeClass("active");
+                $(this).addClass("active");
+
+                const sortOrder = $(this).data("sort");
+                const chapterList = $("#chapterList");
+                const chapters = chapterList.children(".chapter-item").get();
+
+                // Sort the chapters
+                chapters.sort(function(a, b) {
+                    const aNum = parseFloat($(a).data("chapter-number"));
+                    const bNum = parseFloat($(b).data("chapter-number"));
+
+                    return sortOrder === "asc" ? aNum - bNum : bNum - aNum;
+                });
+
+                // Reappend in the new order
+                $.each(chapters, function(idx, item) {
+                    chapterList.append(item);
+                });
+            });
+
+            // Xử lý nút yêu thích
+            $('#favorite-btn').click(function() {
+                @if (isAuthenticated)
+                {
+                    <text>
+                    $.ajax({
+                        url: `/api/MangaStatistics/favorite/${mangaId}`,
+                        type: 'POST',
+                        success: function(response) {
+                            updateFavoriteButton(response.isFavorite);
+                            loadMangaStats(); // Cập nhật lại số liệu thống kê
+                        },
+                        error: function(err) {
+                            console.error('Error toggling favorite:', err);
+                        }
+                    });
+                    </text>
+                }
+                else
+                {
+                    <text>
+                    window.location.href = '/Account/Login';
+                    </text>
+                }
+            });
+
+            function loadMangaStats() {
+                // Tải lượt xem
+                $.ajax({
+                    url: `/api/MangaStatistics/views/${mangaId}`,
+                    type: 'GET',
+                    success: function(response) {
+                        $('#view-count').text(response.totalViews);
+                    }
+                });
+
+                // Tải lượt thích
+                $.ajax({
+                    url: `/api/MangaStatistics/favorite-count/${mangaId}`,
+                    type: 'GET',
+                    success: function(response) {
+                        $('#favorite-count').text(response.favoriteCount);
+                        $('#favorite-total').text(response.favoriteCount);
+                    }
+                });
+            }
+
+            function checkFavoriteStatus() {
+                $.ajax({
+                    url: `/api/MangaStatistics/is-favorite/${mangaId}`,
+                    type: 'GET',
+                    success: function(response) {
+                        updateFavoriteButton(response.isFavorite);
+                    }
+                });
+            }
+
+            function updateFavoriteButton(isFavorite) {
+                if (isFavorite) {
+                    $('#favorite-btn').removeClass('btn-outline-secondary').addClass('btn-danger');
+                } else {
+                    $('#favorite-btn').removeClass('btn-danger').addClass('btn-outline-secondary');
+                }
+            }
+
+            // Hiển thị thông báo nếu có chapter mới được tải
+        @if (ViewBag.NewChapterCount != null && ViewBag.NewChapterCount > 0)
+        {
+            <text>
+                    var newChapterCount = @ViewBag.NewChapterCount;
+                    var mangaTitle = '@Model.Title';
+                    var currentDateTime = '@ViewBag.CurrentDateTime';
+
+                    showToast(`Đã tải ${newChapterCount} chapter mới cho truyện "${mangaTitle}" - ${currentDateTime}`);
+            </text>
+        }
+
+        // Function to show toast notifications
+        function showToast(message, type = 'info') {
+            const toast = `
+                <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : type === 'warning' ? 'warning' : 'info'}" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+
+            const toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                const container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                document.body.appendChild(container);
+            }
+
+            $('#toastContainer').append(toast);
+            const toastElement = new bootstrap.Toast($('.toast').last(), { delay: 3000 });
+            toastElement.show();
+        }
+
+        @if (chapters == null || !chapters.Any())
+        {
+            <text>
+                    // Tự động tải lại trang sau 3 giây để hiển thị chapter nếu đã đồng bộ xong
+                    setTimeout(function() {
+                        location.reload();
+                    }, 3000);
+            </text>
+        }
+        });
+    </script>
+}

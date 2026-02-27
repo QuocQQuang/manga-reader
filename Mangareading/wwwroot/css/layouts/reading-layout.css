@@ -1,0 +1,831 @@
+/* 
+ * Reading Layout Styles
+ * Styles specific to the reading layout of the Manga Reader application
+ */
+
+/* Import theme variables */
+@import '../themes/theme.css';
+
+/* Body styles for reading mode */
+body.reading-mode {
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    background-color: var(--reading-bg);
+    color: var(--text-color);
+    line-height: 1.6;
+    padding: 0;
+    margin: 0;
+    min-height: 100vh;
+    transition: background-color var(--transition-speed-normal) ease, 
+                color var(--transition-speed-normal) ease;
+    overflow-x: hidden;
+}
+
+/* Background color modes - syncing with main theme */
+body.reading-mode[data-theme="light"] {
+    --reading-bg: var(--bg-color); 
+    --reading-controls-bg: rgba(255, 255, 255, 0.8);
+    --reading-controls-text: var(--text-color);
+}
+
+body.reading-mode[data-theme="dark"] {
+    --reading-bg: var(--bg-color);
+    --reading-controls-bg: rgba(31, 41, 55, 0.8);
+    --reading-controls-text: var(--text-color);
+}
+
+/* Main content for reading */
+.reading-container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: var(--spacing-md);
+    background-color: inherit; /* Inherit background from body */
+}
+
+/* Ensure reading-container inherits background - INCREASED SPECIFICITY AGAIN */
+body.reading-mode[data-theme="light"] .reading-container {
+    background-color: inherit; /* Inherit light background from body */
+}
+
+body.reading-mode[data-theme="dark"] .reading-container {
+    background-color: inherit; /* Inherit dark background from body */
+}
+
+/* Reading controls */
+.reading-controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--reading-controls-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: var(--spacing-sm) var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: var(--z-index-fixed);
+    transition: transform var(--transition-speed-normal) ease,
+                background-color var(--transition-speed-normal) ease;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.reading-controls.hidden {
+    transform: translateY(-100%);
+}
+
+.reading-controls-left,
+.reading-controls-center,
+.reading-controls-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.reading-controls-left {
+    flex: 1;
+    min-width: 0; /* Để đảm bảo tiêu đề có thể co lại */
+}
+
+.reading-controls-right {
+    flex: 0 0 auto; /* Không co lại */
+}
+
+.reading-controls-title-link {
+    text-decoration: none;
+    color: inherit;
+    transition: color var(--transition-speed-fast) ease;
+    display: block; /* Đảm bảo có thể áp dụng max-width và text-overflow */
+    max-width: 100%;
+}
+
+.reading-controls-title-link:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.reading-controls-title {
+    font-weight: var(--font-weight-semibold);
+    color: var(--reading-controls-text);
+    margin: 0;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.95rem;
+}
+
+.reading-controls-chapter {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+/* Reading settings panel */
+.reading-settings {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%) translateX(100%);
+    background-color: var(--card-bg); /* Ensure card-bg is used */
+    border-radius: var(--border-radius-lg) 0 0 var(--border-radius-lg);
+    box-shadow: -2px 0 10px var(--shadow-color);
+    padding: var(--spacing-lg);
+    width: 300px;
+    z-index: var(--z-index-modal);
+    transition: transform var(--transition-speed-normal) ease,
+                background-color var(--transition-speed-normal) ease;
+}
+
+/* Explicit theme styles for settings panel text - INCREASED SPECIFICITY AGAIN */
+body.reading-mode[data-theme="light"] .reading-settings h5,
+body.reading-mode[data-theme="light"] .reading-settings label {
+    color: var(--text-color); /* Use light theme text color */
+}
+
+body.reading-mode[data-theme="dark"] .reading-settings h5,
+body.reading-mode[data-theme="dark"] .reading-settings label {
+    color: var(--text-color); /* Use dark theme text color */
+}
+
+.reading-settings.show {
+    transform: translateY(-50%) translateX(0);
+}
+
+.reading-settings.active {
+    transform: translateY(-50%) translateX(0);
+}
+
+.reading-settings h5 {
+    color: var(--text-color);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-md);
+}
+
+.settings-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.settings-group label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-color);
+    font-weight: var(--font-weight-medium);
+}
+
+.reading-settings .form-select {
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    border-color: var(--border-color);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23636f83' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+}
+
+[data-theme="dark"] .reading-settings .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ced4da' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+}
+
+.reading-settings .btn-reading {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    transition: background-color var(--transition-speed-fast) ease;
+}
+
+.reading-settings .btn-reading:hover {
+    background-color: var(--primary-color-hover);
+}
+
+/* Hotkey info panel */
+.hotkey-info {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    left: var(--spacing-lg);
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 4px 10px var(--shadow-color);
+    padding: var(--spacing-md);
+    z-index: var(--z-index-modal);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all var(--transition-speed-normal) ease;
+}
+
+.hotkey-info.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.hotkey-info h6 {
+    color: var(--text-color);
+    font-weight: var(--font-weight-bold);
+}
+
+.hotkey-info p {
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-color);
+}
+
+.hotkey-info kbd {
+    display: inline-block;
+    padding: 0.2em 0.4em;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    box-shadow: inset 0 -1px 0 var(--border-color);
+    min-width: 1.6em;
+    text-align: center;
+}
+
+/* Chapter navigation */
+.chapter-navigation {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--reading-controls-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: var(--spacing-sm) var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: var(--z-index-fixed);
+    transition: transform var(--transition-speed-normal) ease,
+                background-color var(--transition-speed-normal) ease;
+    box-shadow: 0 -2px 4px var(--shadow-color);
+}
+
+.chapter-navigation.hidden {
+    transform: translateY(100%);
+}
+
+/* Bottom navigation bar specific styles */
+.chapter-navigation-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--reading-controls-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: var(--z-index-fixed);
+    transition: transform var(--transition-speed-normal) ease,
+                background-color var(--transition-speed-normal) ease;
+    box-shadow: 0 -2px 4px var(--shadow-color);
+    padding: 0;
+}
+
+.chapter-navigation-bottom.hidden {
+    transform: translateY(100%);
+}
+
+.chapter-navigation-bottom .container {
+    padding: 0.5rem 0;
+}
+
+.chapter-navigation-bottom .reading-title {
+    font-weight: var(--font-weight-semibold);
+    color: var(--reading-controls-text);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 1rem;
+}
+
+/* Nút điều hướng chương trong thanh dưới */
+.chapter-navigation-bottom .reading-controls {
+    position: static;
+    background: none;
+    box-shadow: none;
+    padding: 0;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    justify-content: flex-end;
+}
+
+.chapter-navigation-bottom .prev-chapter-link,
+.chapter-navigation-bottom .next-chapter-link {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.chapter-navigation-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color var(--transition-speed-fast) ease;
+}
+
+.chapter-navigation-btn:hover {
+    background-color: var(--primary-color-hover);
+}
+
+.chapter-navigation-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.chapter-navigation-btn.prev {
+    background-color: var(--button-bg);
+    color: var(--text-color);
+    border: 1px solid var(--button-border);
+}
+
+.chapter-navigation-btn.prev:hover {
+    background-color: var(--button-hover-bg);
+    border-color: var(--button-hover-border);
+}
+
+/* Page navigation controls */
+.page-navigation-controls {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    display: none; /* Mặc định ẩn */
+    z-index: 800;
+    width: 20%;
+    min-width: 40px;
+    max-width: 100px;
+    cursor: pointer;
+}
+
+body.reading-mode-horizontal .page-navigation-controls {
+    display: block;
+}
+
+.page-navigation-left {
+    left: 0;
+}
+
+.page-navigation-right {
+    right: 0;
+}
+
+.page-navigation-indicator {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.3);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.page-navigation-left .page-navigation-indicator {
+    left: 10px;
+}
+
+.page-navigation-right .page-navigation-indicator {
+    right: 10px;
+}
+
+.page-navigation-controls:hover .page-navigation-indicator {
+    opacity: 0.8;
+    background-color: var(--primary-color);
+}
+
+/* Chapter selector */
+.chapter-selector {
+    position: relative;
+}
+
+.chapter-selector-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    background-color: var(--button-bg);
+    color: var(--text-color);
+    border: 1px solid var(--button-border);
+    cursor: pointer;
+    transition: background-color var(--transition-speed-fast) ease;
+}
+
+.chapter-selector-toggle:hover {
+    background-color: var(--button-hover-bg);
+    border-color: var(--button-hover-border);
+}
+
+.chapter-selector-dropdown {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: var(--dropdown-bg);
+    border: 1px solid var(--dropdown-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 -4px 10px var(--shadow-color);
+    z-index: var(--z-index-dropdown);
+    display: none;
+}
+
+.chapter-selector-dropdown.show {
+    display: block;
+    animation: fadeIn var(--transition-speed-fast) ease-out;
+}
+
+.chapter-selector-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    transition: background-color var(--transition-speed-fast) ease;
+    color: var(--dropdown-text);
+}
+
+.chapter-selector-item:hover {
+    background-color: var(--dropdown-hover-bg);
+}
+
+.chapter-selector-item.active {
+    background-color: var(--primary-color-light);
+    color: var(--primary-color);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* Reading progress bar */
+.reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: var(--border-color);
+    z-index: var(--z-index-fixed) + 1;
+}
+
+.reading-progress-bar {
+    height: 100%;
+    background-color: var(--primary-color);
+    width: 0;
+    transition: width 0.1s ease;
+}
+
+/* Reading content */
+.reading-content {
+    padding-top: var(--spacing-lg);
+    padding-bottom: var(--spacing-xl);
+}
+
+/* NEW: Allow reading-container to expand full width when body-fit-width is active */
+body.body-fit-width .reading-container {
+    max-width: 100%; /* Override default max-width */
+    padding-left: 0;  /* Remove horizontal padding */
+    padding-right: 0; /* Remove horizontal padding */
+}
+
+/* Manga pages container - NEW */
+.manga-pages-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+/* Manga pages - NO LONGER USED, replaced by manga-pages-container */
+.manga-pages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.manga-page {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--border-radius-sm);
+    box-shadow: 0 4px 6px var(--shadow-color);
+    transition: all 0.3s ease;
+}
+
+/* Image placeholder styles */
+.manga-page-placeholder {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--bg-color-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    box-shadow: 0 2px 4px var(--shadow-color);
+    padding: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+.manga-page-placeholder .placeholder-icon {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-muted);
+}
+
+.manga-page-placeholder .placeholder-text {
+    color: var(--text-color);
+    font-size: 0.9rem;
+    text-align: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.manga-page-placeholder .retry-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color var(--transition-speed-fast) ease;
+}
+
+.manga-page-placeholder .retry-button:hover {
+    background-color: var(--primary-color-hover);
+}
+
+/* Reading modes - UPDATED to target manga-pages-container instead of generic elements */
+body.reading-mode-vertical .manga-pages-container {
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+/* Updated to limit horizontal mode effects to only manga-pages-container */
+body.reading-mode-horizontal .manga-pages-container {
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    width: 100%;
+    min-height: calc(100vh - 130px); /* Add min-height to ensure proper display */
+    align-items: center;
+}
+
+body.reading-mode-horizontal .page-container {
+    flex: 0 0 auto;
+    scroll-snap-align: center;
+    height: calc(100vh - 130px); 
+    margin: 0 5px;
+}
+
+body.reading-mode-horizontal .manga-page {
+    height: 100%;
+    width: auto;
+    max-height: calc(100vh - 130px);
+}
+
+/* Ensure flexbox layout doesn't affect other elements */
+body.reading-mode-horizontal .chapter-ending,
+body.reading-mode-horizontal .container {
+    flex-direction: column;
+    width: 100%;
+}
+
+body.reading-mode-webtoon .manga-pages-container {
+    flex-direction: column;
+}
+
+body.reading-mode-webtoon .manga-page {
+    width: 100%;
+    height: auto;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+/* Page fit modes - UPDATED for new container structure */
+/* Apply base styles via the container class */
+.manga-pages-container.page-fit-width .manga-page {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    object-fit: contain; /* Ensure image scales correctly within bounds */
+    margin-left: auto;
+    margin-right: auto;
+    display: block; /* Ensure block display for centering */
+}
+
+.manga-pages-container.page-fit-height .manga-page {
+    max-height: calc(100vh - var(--header-height, 60px) - var(--footer-height, 60px) - 2 * var(--spacing-md)); /* Adjust based on header/footer */
+    height: auto; /* Allow height to adjust based on aspect ratio */
+    width: auto; /* Allow width to adjust based on aspect ratio */
+    max-width: 100%; /* Prevent exceeding container width */
+    object-fit: contain;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+.manga-pages-container.page-fit-original .manga-page {
+    max-width: none; /* Remove max-width constraint */
+    width: auto; /* Use original width */
+    height: auto; /* Use original height */
+    object-fit: contain; /* Still contain if it exceeds viewport */
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+/* REMOVED Legacy support for direct classes on manga-page */
+/* .manga-page.fit-width { ... } */
+/* .manga-page.fit-height { ... } */
+/* .manga-page.fit-original { ... } */
+
+/* Special handling for horizontal mode with different fit modes */
+/* These rules correctly combine body mode with container fit class */
+body.reading-mode-horizontal .manga-pages-container.page-fit-width .manga-page {
+    /* Horizontal width fit might need specific adjustments if different from vertical */
+    max-width: 100%; /* Usually same as vertical */
+    height: auto;
+    object-fit: contain;
+}
+
+body.reading-mode-horizontal .manga-pages-container.page-fit-height .manga-page {
+    /* Height fit in horizontal mode means fitting viewport height */
+    height: calc(100vh - var(--header-height, 60px) - var(--footer-height, 60px) - 2 * var(--spacing-sm)); /* Adjust vertical padding */
+    width: auto; /* Width adjusts */
+    max-height: none; /* Remove max-height from vertical mode */
+    object-fit: contain;
+}
+
+body.reading-mode-horizontal .manga-pages-container.page-fit-original .manga-page {
+    /* Original size in horizontal mode */
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+}
+
+/* REMOVED Legacy horizontal mode overrides for direct classes */
+/* body.reading-mode-horizontal .manga-page.fit-width { ... } */
+/* body.reading-mode-horizontal .manga-page.fit-height { ... } */
+/* body.reading-mode-horizontal .manga-page.fit-original { ... } */
+
+/* Legacy background color classes - will be deprecated */
+.bg-color-dark {
+    --reading-bg: #1a1a1a;
+}
+
+.bg-color-black {
+    --reading-bg: #000000;
+}
+
+.bg-color-gray {
+    --reading-bg: #333333;
+}
+
+.bg-color-light {
+    --reading-bg: #f5f5f5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .chapter-navigation-bottom .prev-chapter-link,
+    .chapter-navigation-bottom .next-chapter-link {
+        max-width: 120px;
+    }
+    
+    .reading-controls-title {
+        max-width: 400px;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .reading-controls-title {
+        max-width: 300px;
+        font-size: 0.9rem;
+    }
+    
+    .reading-settings {
+        width: 250px;
+    }
+    
+    .chapter-navigation-bottom .prev-chapter-link,
+    .chapter-navigation-bottom .next-chapter-link {
+        max-width: 100px;
+        font-size: 0.85rem;
+    }
+    
+    .chapter-navigation-bottom .btn-sm {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.75rem;
+    }
+    
+    .chapter-navigation-bottom .reading-title {
+        font-size: 0.9rem;
+        max-width: 240px;
+    }
+}
+
+@media (max-width: 576px) {
+    .reading-controls-title {
+        max-width: 180px;
+        font-size: 0.85rem;
+    }
+    
+    .reading-controls-center {
+        display: none;
+    }
+    
+    .chapter-navigation-bottom .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .chapter-navigation-bottom .reading-title {
+        font-size: 0.8rem;
+        max-width: 200px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .chapter-navigation-bottom .reading-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .chapter-navigation-bottom .prev-chapter-link,
+    .chapter-navigation-bottom .next-chapter-link {
+        max-width: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+        min-width: 0;
+        padding: 0.25rem 0.375rem;
+        font-size: 0.75rem;
+    }
+    
+    .chapter-navigation-bottom .prev-chapter-link span,
+    .chapter-navigation-bottom .next-chapter-link span {
+        display: none;
+    }
+    
+    .btn-reading-outline {
+        padding: 0.25rem 0.4rem;
+    }
+    
+    .hotkey-info {
+        left: var(--spacing-md);
+        bottom: var(--spacing-md);
+        padding: var(--spacing-sm);
+        font-size: var(--font-size-sm);
+    }
+    
+    .container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .reading-controls-title {
+        max-width: 140px;
+        font-size: 0.8rem;
+    }
+    
+    .chapter-navigation-bottom .btn-sm {
+        padding: 0.2rem 0.3rem;
+        font-size: 0.7rem;
+    }
+    
+    .reading-controls .btn-sm {
+        padding: 0.2rem 0.3rem;
+    }
+    
+    .page-navigation-indicator {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -1,0 +1,114 @@
+/**
+ * Theme Switch Component
+ * Styles for the theme switch toggle
+ */
+
+.theme-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+}
+
+.theme-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.theme-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-color-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 34px;
+}
+
+.theme-switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 3px;
+    background-color: var(--card-bg);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.theme-switch input:checked + .theme-switch-slider {
+    background-color: var(--primary-color);
+}
+
+.theme-switch input:checked + .theme-switch-slider:before {
+    transform: translateX(29px);
+}
+
+/* Icons inside the switch */
+.theme-switch-slider .switch-icon {
+    position: absolute;
+    top: 6px;
+    font-size: 14px;
+    color: var(--text-color);
+}
+
+.theme-switch-slider .switch-icon-light {
+    left: 8px;
+    opacity: 1;
+}
+
+.theme-switch-slider .switch-icon-dark {
+    right: 8px;
+    opacity: 0.5;
+}
+
+.theme-switch input:checked + .theme-switch-slider .switch-icon-light {
+    opacity: 0.5;
+}
+
+.theme-switch input:checked + .theme-switch-slider .switch-icon-dark {
+    opacity: 1;
+}
+
+/* Apply transitions only when theme is actively changing */
+body.theme-transition .theme-switch-slider,
+body.theme-transition .theme-switch-slider:before,
+body.theme-transition .theme-switch-slider .switch-icon {
+    transition: all 0.4s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .theme-switch {
+        width: 50px;
+        height: 26px;
+    }
+    
+    .theme-switch-slider:before {
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+    }
+    
+    .theme-switch input:checked + .theme-switch-slider:before {
+        transform: translateX(24px);
+    }
+    
+    .theme-switch-slider .switch-icon {
+        font-size: 12px;
+        top: 5px;
+    }
+    
+    .theme-switch-slider .switch-icon-light {
+        left: 6px;
+    }
+    
+    .theme-switch-slider .switch-icon-dark {
+        right: 6px;
+    }
+}

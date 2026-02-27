@@ -1,0 +1,149 @@
+/* Định dạng cho trang đọc truyện */
+body {
+    background-color: #222;
+    color: #f8f9fa;
+}
+
+.reading-container {
+    position: relative;
+}
+
+.reading-header {
+    background-color: #343a40;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.reading-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem 0;
+}
+
+.page-container {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.manga-page {
+    max-width: 100%;
+    height: auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+.chapter-navigation-bottom {
+    background-color: #343a40;
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+}
+
+/* Định dạng cho các chế độ đọc */
+.manga-page.fit-width {
+    width: 100%;
+    height: auto;
+}
+
+.manga-page.fit-height {
+    height: 95vh;
+    width: auto;
+    max-width: 100%;
+}
+
+.manga-page.original {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+}
+
+/* Định dạng cho chế độ đọc ngang */
+.reading-content.horizontal-reading {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    max-width: none;
+    scroll-behavior: smooth;
+    gap: 10px;
+    padding: 0 10px;
+}
+
+.reading-content.horizontal-reading .page-container {
+    flex: 0 0 auto;
+    margin-right: 10px;
+    margin-bottom: 0;
+    position: relative;
+}
+
+.reading-content.horizontal-reading .manga-page {
+    height: 90vh;
+    width: auto;
+    max-width: none;
+}
+
+/* Hiển thị số trang */
+.page-container.show-page-number:before {
+    content: attr(data-page);
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 2;
+}
+
+/* Thiết lập cho menu dropdown */
+.dropdown-menu {
+    background-color: #343a40;
+    border-color: #495057;
+}
+
+.dropdown-menu .dropdown-item {
+    color: #f8f9fa;
+}
+
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+    background-color: #495057;
+    color: #fff;
+}
+
+.dropdown-menu .dropdown-header {
+    color: #adb5bd;
+}
+
+.dropdown-menu .dropdown-divider {
+    border-color: #495057;
+}
+
+/* Cải thiện giao diện các nút trong reader */
+.btn-group .btn-reading-outline:not(:last-child) {
+    border-right: none;
+}
+
+/* Đè lên các class d-flex và align-items-center */
+.reading-controls {
+    display: flex !important;
+    gap: 5px !important;
+    align-items: center !important;
+}
+
+/* Reponsive adjustments */
+@media (max-width: 576px) {
+    .reading-header h4 {
+        font-size: 1rem;
+    }
+
+    .chapter-navigation .btn {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+    }
+}

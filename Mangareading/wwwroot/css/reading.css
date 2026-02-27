@@ -1,0 +1,865 @@
+:root {
+    /* Các biến màu chính */
+    --reader-bg-dark: #1a1a1a;
+    --reader-bg-black: #000000;
+    --reader-bg-gray: #2a2a2a;
+    --reader-bg-light: #f0f0f0;
+    --reader-text-light: #e5e7eb;
+    --reader-header-dark: #252525;
+    --reader-header-light: #ffffff;
+    --reader-accent: #6366f1;
+    --reader-accent-hover: #4f46e5;
+    --reader-accent-light: rgba(99, 102, 241, 0.2);
+    --reader-shadow: rgba(0, 0, 0, 0.25);
+    --reader-text-muted: #9ca3af;
+}
+
+/* No transition class to prevent animation when switching themes */
+body.no-transition,
+body.no-transition *,
+body.no-transition *:before,
+body.no-transition *:after {
+    transition: none !important;
+}
+
+/* Thiết lập cơ bản cho chế độ đọc */
+body.reading-mode {
+    background-color: var(--reader-bg-dark);
+    color: var(--reader-text-light);
+    padding-top: 0;
+    margin: 0;
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    transition: background-color 0.3s ease;
+}
+
+    /* Dark Mode Variations */
+    body.reading-mode.bg-black {
+        background-color: var(--reader-bg-black);
+    }
+
+    body.reading-mode.bg-gray {
+        background-color: var(--reader-bg-gray);
+    }
+
+    body.reading-mode.bg-light {
+        background-color: var(--reader-bg-light);
+        color: #1a1a1a;
+    }
+
+.reading-container {
+    position: relative;
+    min-height: 100vh;
+    padding-top: 60px; /* Add padding to account for fixed header */
+    padding-bottom: 70px; /* Adjusted padding to account for fixed footer */
+    width: 100%;
+}
+
+/* Header Styles */
+header.reading-header {
+    background-color: var(--reader-header-dark);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 0.75rem 0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    transition: transform 0.25s ease, opacity 0.25s ease, background-color 0.3s ease;
+    color: var(--reader-text-light);
+    will-change: transform, opacity;
+}
+
+.reading-header.hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.reading-title {
+    font-weight: 700;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--reader-text-light);
+}
+
+.reading-title-link {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s ease;
+}
+
+.reading-title-link:hover {
+    color: var(--reader-accent);
+    text-decoration: none;
+}
+
+.chapter-label {
+    font-weight: 600;
+    color: var(--reader-text-muted);
+}
+
+/* Light mode adjustments */
+body.reading-mode.bg-light .reading-header {
+    background-color: var(--reader-header-light);
+}
+
+body.reading-mode.bg-light .reading-title,
+body.reading-mode.bg-light .reading-controls .btn-icon,
+body.reading-mode.bg-light .reading-header {
+    color: #333;
+}
+
+/* Navigation Controls */
+.reading-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Button Styles */
+.btn-reading {
+    background-color: var(--reader-accent);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+    .btn-reading:hover,
+    .btn-reading:focus {
+        background-color: var(--reader-accent-hover);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+.btn-reading-outline {
+    background-color: transparent;
+    color: var(--reader-accent);
+    border: 1px solid var(--reader-accent);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+    .btn-reading-outline:hover,
+    .btn-reading-outline:focus {
+        background-color: var(--reader-accent);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+/* Icon buttons */
+.btn-icon {
+    background-color: transparent;
+    color: var(--reader-text-light);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+    .btn-icon:hover,
+    .btn-icon:focus {
+        background-color: var(--reader-accent);
+        color: white;
+        border-color: var(--reader-accent);
+        transform: translateY(-2px);
+    }
+
+    .btn-icon.active {
+        background-color: var(--reader-accent);
+        color: white;
+        border-color: var(--reader-accent);
+    }
+
+/* Content area */
+.reading-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1rem 0.5rem;
+    transition: max-width 0.3s ease;
+}
+
+    /* Adjust content width based on viewing mode */
+    .reading-content.mode-vertical {
+        max-width: 1000px;
+    }
+
+    .reading-content.mode-horizontal {
+        max-width: 100%;
+        padding: 0;
+        height: calc(100vh - 60px);
+        display: flex;
+        align-items: center;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+    }
+
+    .reading-content.mode-webtoon {
+        max-width: 800px;
+    }
+
+/* Page container */
+.page-container {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInPage 0.5s ease forwards;
+}
+
+/* Different styling for horizontal mode */
+.mode-horizontal .page-container {
+    margin-bottom: 0;
+    padding: 0 10px;
+    height: 100%;
+    flex: 0 0 auto;
+    scroll-snap-align: center;
+    animation: none;
+    opacity: 1;
+    transform: none;
+}
+
+@keyframes fadeInPage {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Manga Page Styling */
+.manga-page {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 15px var(--reader-shadow);
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+
+    .manga-page.loading {
+        min-height: 300px;
+        background-color: #333;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+
+    /* Image placeholder styles */
+    .image-placeholder {
+        position: relative;
+        background-color: var(--reader-bg-dark);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        transition: opacity 0.3s ease;
+        box-shadow: 0 4px 15px var(--reader-shadow);
+    }
+
+    body.reading-mode.bg-light .image-placeholder {
+        background-color: #e0e0e0;
+    }
+
+    .image-placeholder.fade-out {
+        opacity: 0;
+    }
+
+    .placeholder-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    body.reading-mode.bg-light .placeholder-content {
+        color: rgba(0, 0, 0, 0.6);
+    }
+
+    .placeholder-info {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+
+    .placeholder-dimensions {
+        font-family: monospace;
+    }
+
+    /* Page fit styles */
+    .manga-page.fit-width {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .manga-page.fit-height {
+        max-height: calc(100vh - 120px);
+        width: auto;
+    }
+
+    .manga-page.fit-original {
+        max-width: none;
+        max-height: none;
+    }
+
+/* Horizontal mode specific */
+.mode-horizontal .manga-page {
+    max-height: calc(100vh - 120px);
+    border-radius: 0;
+}
+
+/* Bottom Navigation */
+footer.chapter-navigation-bottom {
+    background-color: var(--reader-header-dark);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    padding: 0.85rem 0;
+    box-shadow: 0 -4px 10px var(--reader-shadow);
+    z-index: 900;
+    transition: transform 0.25s ease, opacity 0.25s ease, background-color 0.3s ease;
+    color: var(--reader-text-light);
+    will-change: transform, opacity;
+    height: 60px; /* Set a fixed height for the footer */
+}
+
+body.reading-mode.bg-light .chapter-navigation-bottom {
+    background-color: var(--reader-header-light);
+    color: #333;
+}
+
+.chapter-navigation-bottom.hidden {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Make sure the title in the bottom navigation has the same style as the top */
+.chapter-navigation-bottom .reading-title {
+    font-weight: 700;
+    margin: 0;
+    max-width: 70%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--reader-text-light);
+    font-size: 1rem;
+}
+
+body.reading-mode.bg-light .chapter-navigation-bottom .reading-title {
+    color: #333;
+}
+
+/* Reading Progress Indicator */
+.reading-progress {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    background-color: var(--reader-header-dark);
+    color: var(--reader-text-light);
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    box-shadow: 0 4px 15px var(--reader-shadow);
+    z-index: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+    .reading-progress.hidden {
+        opacity: 0;
+        transform: translateY(20px);
+        pointer-events: none;
+    }
+
+body.reading-mode.bg-light .reading-progress {
+    background-color: white;
+    color: #333;
+}
+
+/* Settings Panel */
+.reading-settings {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    background-color: var(--reader-header-dark);
+    color: var(--reader-text-light);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 5px 20px var(--reader-shadow);
+    z-index: 1000;
+    width: 320px;
+    transform: translateX(350px);
+    transition: transform 0.3s ease;
+}
+
+    .reading-settings.active {
+        transform: translateX(0);
+    }
+
+body.reading-mode.bg-light .reading-settings {
+    background-color: white;
+    color: #333;
+}
+
+.settings-group {
+    margin-bottom: 1.5rem;
+}
+
+    .settings-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .settings-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .settings-group select,
+    .settings-group input[type="range"] {
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background-color: rgba(0, 0, 0, 0.2);
+        color: var(--reader-text-light);
+    }
+
+body.reading-mode.bg-light .settings-group select,
+body.reading-mode.bg-light .settings-group input[type="range"] {
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    color: #333;
+}
+
+/* Hotkey Info Panel */
+.hotkey-info {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background-color: rgba(45, 45, 45, 0.9);
+    color: var(--reader-text-light);
+    padding: 1.25rem 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    max-width: 320px;
+    box-shadow: 0 5px 20px var(--reader-shadow);
+    z-index: 800;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+}
+
+    .hotkey-info.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+body.reading-mode.bg-light .hotkey-info {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #333;
+}
+
+.hotkey-info h5 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--reader-accent);
+}
+
+.hotkey-info-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.hotkey-info kbd {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.15rem 0.5rem;
+    border-radius: 0.25rem;
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    min-width: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+body.reading-mode.bg-light .hotkey-info kbd {
+    background-color: #e5e5e5;
+    color: #333;
+}
+
+/* Page Counter */
+.page-counter {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    background-color: var(--reader-header-dark);
+    color: var(--reader-text-light);
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    box-shadow: 0 4px 15px var(--reader-shadow);
+    z-index: 800;
+    display: flex;
+    align-items: center;
+    transition: opacity 0.3s ease;
+}
+
+body.reading-mode.bg-light .page-counter {
+    background-color: white;
+    color: #333;
+}
+
+.page-counter.hidden {
+    opacity: 0;
+}
+
+/* Bottom Information */
+.chapter-end-section {
+    margin-top: 3rem;
+    margin-bottom: 5rem;
+    padding: 2rem;
+    text-align: center;
+    border-radius: 1rem;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.reading-mode.bg-light .chapter-end-section {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.chapter-end-section .chapter-navigation {
+    margin: 1.5rem 0;
+}
+
+.reader-info {
+    margin-top: 2rem;
+    font-size: 0.875rem;
+    color: var(--reader-text-muted);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+    .reader-info img {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 2px solid var(--reader-accent);
+    }
+
+/* Double Page Mode */
+.double-page-container {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+    .double-page-container .manga-page {
+        max-height: calc(100vh - 120px);
+    }
+
+/* Reading Mode Transitions */
+.page-transition-enter {
+    opacity: 0;
+}
+
+.page-transition-enter-active {
+    opacity: 1;
+    transition: opacity 300ms;
+}
+
+.page-transition-exit {
+    opacity: 1;
+}
+
+.page-transition-exit-active {
+    opacity: 0;
+    transition: opacity 300ms;
+}
+
+/* Page Preloading Styles */
+.preloading-indicator {
+    position: fixed;
+    bottom: 120px;
+    right: 20px;
+    background-color: var(--reader-header-dark);
+    color: var(--reader-text-light);
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    box-shadow: 0 4px 15px var(--reader-shadow);
+    z-index: 799;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: opacity 0.3s ease;
+}
+
+    .preloading-indicator.hidden {
+        opacity: 0;
+    }
+
+/* Progress bar for chapter navigation */
+.progress-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: transparent;
+    z-index: 1001;
+}
+
+.reading-progress-bar {
+    height: 100%;
+    background-color: var(--reader-accent);
+    width: 0%;
+    transition: width 0.1s ease;
+}
+
+/* Zoom Controls */
+.zoom-controls {
+    position: fixed;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 900;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+    .zoom-controls:hover {
+        opacity: 1;
+    }
+
+.zoom-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--reader-header-dark);
+    color: var(--reader-text-light);
+    border: none;
+    box-shadow: 0 2px 8px var(--reader-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+    .zoom-btn:hover {
+        transform: translateY(-2px);
+        background-color: var(--reader-accent);
+    }
+
+body.reading-mode.bg-light .zoom-btn {
+    background-color: white;
+    color: #333;
+}
+
+/* Page turn indicators for horizontal mode */
+.page-turn-indicator {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 60px;
+    height: 60px;
+    background-color: rgba(0, 0, 0, 0.4);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+    z-index: 850;
+}
+
+.page-turn-left {
+    left: 20px;
+}
+
+.page-turn-right {
+    right: 20px;
+}
+
+body.reading-mode:hover .page-turn-indicator {
+    opacity: 0.7;
+}
+
+.page-turn-indicator:hover {
+    opacity: 1 !important;
+    transform: translateY(-50%) scale(1.1);
+    background-color: var(--reader-accent);
+}
+
+body.reading-mode.bg-light .page-turn-indicator {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Custom Timestamp Display */
+.timestamp-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--reader-text-muted);
+    font-size: 0.875rem;
+}
+
+    .timestamp-display .time-icon {
+        color: var(--reader-accent);
+    }
+
+/* User Information Badge */
+.user-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--reader-accent-light);
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+    color: var(--reader-accent);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+    .user-badge img {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+    }
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .reading-title {
+        font-size: 1rem;
+        max-width: 50%;
+    }
+
+    .reading-controls .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .reading-progress {
+        bottom: 70px;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .reading-settings {
+        width: 280px;
+    }
+
+    .hotkey-info {
+        max-width: 250px;
+    }
+
+    .page-turn-indicator {
+        width: 50px;
+        height: 50px;
+    }
+
+    .page-turn-left {
+        left: 10px;
+    }
+
+    .page-turn-right {
+        right: 10px;
+    }
+
+    .zoom-controls {
+        right: 10px;
+    }
+}
+
+/* Support for left-to-right manga reading */
+.reading-content.mode-ltr .mode-horizontal {
+    direction: ltr;
+}
+
+/* Support for right-to-left manga reading */
+.reading-content.mode-rtl .mode-horizontal {
+    direction: rtl;
+}
+
+/* Custom scrollbar */
+.reading-mode ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.reading-mode ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.reading-mode ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+    .reading-mode ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+/* Light mode scrollbar */
+body.reading-mode.bg-light ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.reading-mode.bg-light ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+    body.reading-mode.bg-light ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+/* Animation for page loading */
+@keyframes pageLoading {
+    0% {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.page-load-animation {
+    animation: pageLoading 0.3s ease forwards;
+}

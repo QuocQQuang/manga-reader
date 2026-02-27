@@ -1,0 +1,142 @@
+/* Styles for error pages */
+.error-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+}
+
+.error-card {
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.error-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.error-header {
+    border-bottom: none;
+    padding: 1.5rem 1.5rem 0.5rem;
+}
+
+.error-title {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.error-body {
+    padding: 2rem;
+}
+
+.error-image {
+    max-height: 220px;
+    margin-bottom: 1.5rem;
+    transition: all 0.5s ease;
+}
+
+.error-image:hover {
+    transform: scale(1.05);
+}
+
+.error-message {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+.error-description {
+    color: #6c757d;
+    margin-bottom: 2rem;
+}
+
+.error-alert {
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.error-buttons {
+    margin-top: 1.5rem;
+}
+
+.error-btn {
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.error-btn:hover {
+    transform: translateY(-2px);
+}
+
+.error-btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.error-btn-secondary {
+    background-color: transparent;
+    border-color: #6c757d;
+}
+
+.error-footer {
+    background-color: transparent;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem;
+}
+
+.error-timestamp {
+    font-size: 0.8rem;
+    color: #adb5bd;
+}
+
+/* Status code specific styles */
+.error-400 .error-title i { color: #fd7e14; }
+.error-401 .error-title i { color: #ffc107; }
+.error-403 .error-title i { color: #dc3545; }
+.error-404 .error-title i { color: #6f42c1; }
+.error-500 .error-title i { color: #dc3545; }
+.error-503 .error-title i { color: #fd7e14; }
+
+/* Dark mode support */
+[data-theme="dark"] .error-card {
+    background-color: #2d3748;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .error-header {
+    background-color: #2d3748;
+}
+
+[data-theme="dark"] .error-description {
+    color: #a0aec0;
+}
+
+[data-theme="dark"] .error-footer {
+    background-color: #2d3748;
+    border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .error-timestamp {
+    color: #718096;
+}
+
+[data-theme="dark"] .error-btn-secondary {
+    color: #e2e8f0;
+    border-color: #4a5568;
+}
+
+[data-theme="dark"] .error-btn-secondary:hover {
+    background-color: #4a5568;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.error-card {
+    animation: fadeIn 0.5s ease-out forwards;
+}

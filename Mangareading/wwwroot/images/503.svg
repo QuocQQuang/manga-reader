@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Animation Definitions -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f6f0ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f0e6ff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background with subtle gradient -->
+  <rect width="600" height="400" fill="url(#bgGradient)" rx="15" ry="15" />
+  
+  <!-- Decorative elements -->
+  <g id="decorativeElements">
+    <!-- Tool patterns -->
+    <path d="M50,50 l15,15 l-15,15" stroke="#9966CC" stroke-width="2" stroke-opacity="0.3" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M550,350 l-15,-15 l15,-15" stroke="#9966CC" stroke-width="2" stroke-opacity="0.3" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M30,200 l15,15 l-15,15" stroke="#9966CC" stroke-width="2" stroke-opacity="0.3" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M570,150 l-15,-15 l15,-15" stroke="#9966CC" stroke-width="2" stroke-opacity="0.3" stroke-linecap="round" stroke-linejoin="round" />
+    
+    <!-- Gear shapes -->
+    <g>
+      <path d="M520,80 l4,0 l2,-3 l-2,-3 h-4 l-2,3 z" fill="#9966CC" opacity="0.7">
+        <animate attributeName="transform" attributeType="XML" type="rotate" from="0 520 80" to="360 520 80" dur="10s" repeatCount="indefinite" />
+      </path>
+      <path d="M80,320 l3,0 l1.5,-2.5 l-1.5,-2.5 h-3 l-1.5,2.5 z" fill="#9966CC" opacity="0.7">
+        <animate attributeName="transform" attributeType="XML" type="rotate" from="0 80 320" to="360 80 320" dur="8s" repeatCount="indefinite" />
+      </path>
+      <path d="M150,50 l2.5,0 l1.25,-2 l-1.25,-2 h-2.5 l-1.25,2 z" fill="#9966CC" opacity="0.7">
+        <animate attributeName="transform" attributeType="XML" type="rotate" from="0 150 50" to="360 150 50" dur="12s" repeatCount="indefinite" />
+      </path>
+    </g>
+  </g>
+  
+  <!-- 503 Text with shadows -->
+  <g id="errorText">
+    <text x="300" y="180" font-family="'Segoe UI', Roboto, Arial" font-size="130" font-weight="900" fill="#BDA0DB" text-anchor="middle" letter-spacing="-2">503</text>
+    <text x="303" y="183" font-family="'Segoe UI', Roboto, Arial" font-size="130" font-weight="900" fill="#9966CC" text-anchor="middle" letter-spacing="-2">503</text>
+  </g>
+  
+  <!-- Animated maintenance tools -->
+  <g transform="translate(300, 240)">
+    <g>
+      <!-- Wrench -->
+      <path d="M-40,-30 a15,15 0 0,0 0,30 a15,5 0 0,0 15,-5 l30,0 l5,-5 l-5,-5 l-30,0 a15,5 0 0,0 -15,-5 a15,15 0 0,0 0,-10" 
+        fill="#FFFFFF" stroke="#9966CC" stroke-width="2" />
+        
+      <!-- Screwdriver -->  
+      <path d="M20,-10 l20,-20 a5,5 0 0,1 7,7 l-20,20 l-7,-7z" fill="#FFFFFF" stroke="#9966CC" stroke-width="2" />
+      <rect x="13" y="-3" width="14" height="30" rx="2" ry="2" transform="rotate(45 20 -3)" fill="#FFFFFF" stroke="#9966CC" stroke-width="2" />
+      
+      <!-- Rotating gear in center -->
+      <path d="M0,-15 l5,0 l2,-7 l-2,-7 h-10 l-2,7 l2,7 z M0,-15 l0,30 M-15,0 l30,0 M-10,10 l20,-20 M-10,-10 l20,20" 
+        stroke="#9966CC" stroke-width="2" fill="none" stroke-linecap="round">
+        <animate attributeName="transform" attributeType="XML" type="rotate" from="0 0 0" to="360 0 0" dur="8s" repeatCount="indefinite" />
+      </path>
+      
+      <animateTransform attributeName="transform" type="translate" values="0,-3;0,3;0,-3" dur="4s" repeatCount="indefinite" />
+    </g>
+  </g>
+  
+  <!-- Error message with better typography -->
+  <g id="errorMessage">
+    <rect x="150" y="305" width="300" height="40" rx="20" ry="20" fill="#9966CC" opacity="0.1" />
+    <text x="300" y="330" font-family="'Segoe UI', Roboto, Arial" font-size="20" font-weight="500" fill="#343A40" text-anchor="middle">Dịch vụ không khả dụng</text>
+  </g>
+</svg>

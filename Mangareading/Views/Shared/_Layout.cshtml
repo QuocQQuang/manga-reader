@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<html lang="vi" data-theme="@(Context.Session.GetString("UserTheme") ?? "light")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Manga Reader</title>
+
+    <!-- Inline script to prevent theme transition animation on page load -->
+    <script>
+        // Get theme from localStorage or use the server-side theme
+        const savedTheme = localStorage.getItem('theme');
+        const serverTheme = document.documentElement.getAttribute('data-theme');
+
+        // Apply theme immediately without transition
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
+        // Add class to prevent any transitions during page load
+        document.documentElement.classList.add('no-transition');
+
+        // Remove the no-transition class after the page has loaded
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.documentElement.classList.remove('no-transition');
+            }, 100);
+        });
+    </script>
+
+    <!-- Critical CSS for theme - load before anything else -->
+    <link rel="stylesheet" href="~/css/themes/theme-preload.css" asp-append-version="true" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- Theme system -->
+    <link rel="stylesheet" href="~/css/themes/theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/themes/theme-overrides.css" asp-append-version="true" />
+
+    <!-- Component styles -->
+    <link rel="stylesheet" href="~/css/components/buttons.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/cards.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/forms.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/pagination.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/header-search.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/toaster.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/theme-switch.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/mangadex-cdn-handler.css" asp-append-version="true" />
+
+    <!-- Layout styles -->
+    <link rel="stylesheet" href="~/css/layouts/main-layout.css" asp-append-version="true" />
+
+    <!-- Legacy styles (to be refactored) -->
+    <link rel="stylesheet" href="~/css/variables.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/common.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/manga.css" asp-append-version="true" />
+
+    <!-- Additional page-specific styles -->
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <!-- Facebook SDK -->
+    <div id="fb-root"></div>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v17.0&appId=YOUR_APP_ID&autoLogAppEvents=1" nonce="randomNonce"></script>
+    <!-- End Facebook SDK -->
+    <header>
+        <nav class="navbar navbar-expand-md navbar-light fixed-top">
+            <div class="container">
+                <a class="navbar-brand" href="/">
+                    <!-- <img src="/images/logo.png" alt="Manga Reader Logo" /> -->
+                    <span>Manga Reader</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
+                               href="/">Trang Chủ</a>
+                        </li>
+                        <li class="nav-item">
+                            @{ 
+                                var isMangaListActive = ViewContext.RouteData.Values["controller"]?.ToString() == "Manga" && 
+                                                      ViewContext.RouteData.Values["action"]?.ToString() == "Index" && 
+                                                      string.IsNullOrEmpty(Context.Request.Query["view"]) && 
+                                                      string.IsNullOrEmpty(Context.Request.Query["sort"]);
+                            }
+                            <a class="nav-link @(isMangaListActive ? "active" : "")"
+                               href="/manga">Danh Sách Truyện</a>
+                        </li>
+                        <li class="nav-item">
+                             <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Manga" && Context.Request.Query["view"] == "genres" ? "active" : "")" 
+                               href="/manga?view=genres">Thể Loại</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Manga" && Context.Request.Query["sort"] == "latest" ? "active" : "")" 
+                               href="/manga?sort=latest">Mới Cập Nhật</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Search" && ViewContext.RouteData.Values["action"]?.ToString() == "Advanced" ? "active" : "")"
+                               href="/search/advanced">Tìm Kiếm Nâng Cao</a>
+                        </li>
+                    </ul>
+                    <div class="d-flex align-items-center gap-3 navbar-right-items ms-auto">
+                        <label class="theme-switch flex-shrink-0" title="Chuyển đổi giao diện sáng/tối">
+                            <input type="checkbox" id="themeToggleCheckbox">
+                            <span class="theme-switch-slider">
+                                <i class="fas fa-sun switch-icon switch-icon-light"></i>
+                                <i class="fas fa-moon switch-icon switch-icon-dark"></i>
+                            </span>
+                        </label>
+
+                        <div class="login-partial-container flex-shrink-0">
+                        <partial name="_LoginPartial" />
+                        </div>
+
+                        <div class="header-search flex-shrink-0" id="headerSearch">
+                            <input id="headerSearchInput" class="form-control" type="search" placeholder="Tìm truyện..." aria-label="Search">
+                            <div id="headerSearchResults" class="search-results"></div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+
+
+    <footer class="border-top py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="fw-bold mb-3">Manga Reader</h5>
+                    <p>Website đọc truyện tranh online miễn phí và cập nhật nhanh nhất.</p>
+
+                    <p class="small text-muted">Hiện tại: @ViewBag.CurrentDateTime</p>
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="fw-bold mb-3">Liên kết</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="/terms">Điều khoản sử dụng</a></li>
+                        <li class="mb-2"><a href="/privacy">Chính sách bảo mật</a></li>
+                        <li class="mb-2"><a href="/about">Về chúng tôi</a></li>
+                        <li class="mb-2"><a href="/contact">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-3">Theo dõi chúng tôi</h5>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-decoration-none fs-5"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-decoration-none fs-5"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-decoration-none fs-5"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-decoration-none fs-5"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Main script loader -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/theme-switcher.js" asp-append-version="true"></script>
+    <script src="~/js/header-search.js" asp-append-version="true"></script>
+
+    <!-- Legacy scripts (to be refactored) -->
+    <script src="~/js/utility.js" asp-append-version="true"></script>
+    <script src="~/js/manga.js" asp-append-version="true"></script>
+
+    <!-- Additional page-specific scripts -->
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

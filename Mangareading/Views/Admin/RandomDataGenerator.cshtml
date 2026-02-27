@@ -1,0 +1,155 @@
+@{
+    ViewData["Title"] = "Tạo Dữ Liệu Ngẫu Nhiên";
+    Layout = "_AdminLayout";
+}
+
+<div class="random-data-container">
+    <div class="mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Tạo Dữ Liệu Ngẫu Nhiên</h1>
+        <p class="text-muted">Tạo dữ liệu ngẫu nhiên như lượt xem, yêu thích cho truyện</p>
+    </div>
+
+    <div class="row">
+        <!-- Tạo lượt xem ngẫu nhiên -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header py-3 d-flex align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-eye me-2"></i> Tạo Lượt Xem Ngẫu Nhiên
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Tạo lượt xem ngẫu nhiên trong khoảng thời gian từ 21/04/2024 đến 21/04/2025, 
+                        sử dụng người dùng hiện có trong hệ thống. Hệ thống sẽ tạo <strong>X lượt xem cho mỗi truyện</strong>.
+                    </p>
+                    
+                    <form method="post" action="/admin/create-random-views" id="randomViewsForm" class="admin-form">
+                        <div class="form-group mb-3">
+                            <label for="mangaId" class="form-label">ID Truyện (0 để tạo cho tất cả truyện):</label>
+                            <input type="number" id="mangaId" name="mangaId" class="form-control" value="0" min="0" style="max-width: 150px;">
+                            <div class="form-text">Nhập 0 để tạo ngẫu nhiên cho tất cả các truyện</div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="viewCount" class="form-label">Số lượng lượt xem:</label>
+                            <input type="number" id="viewCount" name="count" class="form-control" value="100" min="1" max="1000" style="max-width: 150px;">
+                            <div class="form-text">Giới hạn từ 1-1000 lượt xem</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="createViewsBtn">
+                            <i class="fas fa-plus-circle me-2"></i> Tạo Lượt Xem Ngẫu Nhiên
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tạo yêu thích ngẫu nhiên -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header py-3 d-flex align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-heart me-2"></i> Tạo Yêu Thích Ngẫu Nhiên
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Tạo yêu thích ngẫu nhiên trong khoảng thời gian từ 21/04/2024 đến 21/04/2025, 
+                        sử dụng người dùng hiện có trong hệ thống. Hệ thống sẽ tạo <strong>X lượt yêu thích cho mỗi truyện</strong>.
+                    </p>
+                    
+                    <form method="post" action="/admin/create-random-favorites" id="randomFavoritesForm" class="admin-form">
+                        <div class="form-group mb-3">
+                            <label for="favMangaId" class="form-label">ID Truyện (0 để tạo cho tất cả truyện):</label>
+                            <input type="number" id="favMangaId" name="mangaId" class="form-control" value="0" min="0" style="max-width: 150px;">
+                            <div class="form-text">Nhập 0 để tạo ngẫu nhiên cho tất cả các truyện</div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="favoriteCount" class="form-label">Số lượng yêu thích:</label>
+                            <input type="number" id="favoriteCount" name="count" class="form-control" value="50" min="1" max="500" style="max-width: 150px;">
+                            <div class="form-text">Giới hạn từ 1-500 yêu thích</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="createFavoritesBtn">
+                            <i class="fas fa-plus-circle me-2"></i> Tạo Yêu Thích Ngẫu Nhiên
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Thông tin khác -->
+    <div class="card mb-4">
+        <div class="card-header py-3 d-flex align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-info-circle me-2"></i> Thông Tin Về Dữ Liệu Ngẫu Nhiên
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <h5><i class="fas fa-lightbulb me-2"></i> Lưu ý quan trọng:</h5>
+                <ul class="mb-0">
+                    <li>Tất cả dữ liệu được tạo ngẫu nhiên sẽ có ngày trong khoảng từ 21/04/2024 đến 21/04/2025.</li>
+                    <li>Dữ liệu lượt xem được tạo dựa trên các chapter của truyện.</li>
+                    <li>Nếu không chỉ định ID truyện cụ thể, hệ thống sẽ tạo dữ liệu ngẫu nhiên cho tất cả truyện.</li>
+                    <li>Một người dùng chỉ có thể yêu thích một truyện một lần (không trùng lặp).</li>
+                    <li>Quá trình tạo dữ liệu có thể mất thời gian nếu số lượng lớn.</li>
+                </ul>
+            </div>
+            
+            <div class="mt-4">
+                <h5 class="font-weight-bold">Số liệu hiện tại:</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-primary text-white shadow">
+                            <div class="card-body">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1">Tổng số lượt xem</div>
+                                <div class="h5 mb-0 font-weight-bold text-white" id="totalViews">Đang tải...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-success text-white shadow">
+                            <div class="card-body">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1">Tổng số yêu thích</div>
+                                <div class="h5 mb-0 font-weight-bold text-white" id="totalFavorites">Đang tải...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-info text-white shadow">
+                            <div class="card-body">
+                                <div class="text-xs font-weight-bold text-uppercase mb-1">Tổng số người dùng</div>
+                                <div class="h5 mb-0 font-weight-bold text-white" id="totalUsers">Đang tải...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(async function() {
+            // Hiển thị loading khi submit form
+            $('#randomViewsForm, #randomFavoritesForm').on('submit', function() {
+                const submitBtn = $(this).find('button[type="submit"]');
+                submitBtn.prop('disabled', true);
+                submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i> Đang xử lý...');
+            });
+            
+            // Tải số liệu hiện tại (giả lập cho demo)
+            try {
+                // Trong thực tế bạn sẽ gọi API để lấy số liệu thật
+                setTimeout(() => {
+                    $('#totalViews').text(Math.floor(Math.random() * 10000));
+                    $('#totalFavorites').text(Math.floor(Math.random() * 5000));
+                    $('#totalUsers').text(Math.floor(Math.random() * 1000));
+                }, 500);
+            } catch (error) {
+                console.error('Lỗi khi tải số liệu:', error);
+            }
+        });
+    </script>
+}

@@ -1,0 +1,202 @@
+/* 
+ * Searchbar Component Styles
+ * Reusable searchbar component for the Manga Reader application
+ */
+
+/* Import theme variables */
+@import '../themes/theme.css';
+
+/* Main searchbar container */
+.searchbar-container {
+    position: relative;
+    width: 100%;
+}
+
+/* Header searchbar specific styling */
+.header-search {
+    position: relative;
+    width: 250px;
+    transition: width var(--transition-speed-normal) ease;
+}
+
+.header-search:focus-within {
+    width: 300px;
+}
+
+/* Search input styling */
+.searchbar-input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    padding-right: 2.5rem;
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--input-border);
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    font-size: var(--font-size-md);
+    transition: all var(--transition-speed-normal) ease;
+}
+
+.searchbar-input::placeholder {
+    color: var(--input-placeholder);
+}
+
+.searchbar-input:focus {
+    outline: none;
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 3px var(--input-focus-ring);
+}
+
+/* Search button styling */
+.searchbar-button {
+    position: absolute;
+    right: var(--spacing-sm);
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    transition: color var(--transition-speed-fast) ease;
+}
+
+.searchbar-button:hover {
+    color: var(--primary-color);
+}
+
+/* Search results dropdown */
+.searchbar-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--dropdown-bg);
+    border: 1px solid var(--dropdown-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color);
+    z-index: var(--z-index-dropdown);
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+    margin-top: var(--spacing-xs);
+}
+
+.searchbar-results.show {
+    display: block;
+    animation: fadeIn var(--transition-speed-fast) ease-out;
+}
+
+/* Search result item */
+.searchbar-result-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    transition: background-color var(--transition-speed-fast) ease;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.searchbar-result-item:hover {
+    background-color: var(--dropdown-hover-bg);
+}
+
+.searchbar-result-item:not(:last-child) {
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Result item with image */
+.searchbar-result-image {
+    width: 40px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: var(--border-radius-sm);
+}
+
+.searchbar-result-content {
+    flex: 1;
+}
+
+.searchbar-result-title {
+    font-weight: var(--font-weight-medium);
+    color: var(--text-color);
+    margin-bottom: 2px;
+}
+
+.searchbar-result-info {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+/* No results message */
+.searchbar-no-results {
+    padding: var(--spacing-md);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+/* Loading indicator */
+.searchbar-loading {
+    padding: var(--spacing-md);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.searchbar-loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: var(--spacing-xs);
+}
+
+/* Advanced search link */
+.searchbar-advanced-link {
+    display: block;
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: center;
+    font-size: var(--font-size-sm);
+    color: var(--primary-color);
+    background-color: var(--dropdown-bg);
+    border-top: 1px solid var(--border-color);
+    text-decoration: none;
+    transition: background-color var(--transition-speed-fast) ease;
+}
+
+.searchbar-advanced-link:hover {
+    background-color: var(--dropdown-hover-bg);
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .header-search {
+        width: 100%;
+    }
+    
+    .header-search:focus-within {
+        width: 100%;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

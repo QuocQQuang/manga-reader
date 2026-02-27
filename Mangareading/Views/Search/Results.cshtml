@@ -1,0 +1,257 @@
+@model List<Mangareading.Models.Manga>
+@{
+    ViewBag.Title = "Kết quả tìm kiếm";
+}
+
+<div class="container">
+    <h2>Kết quả tìm kiếm</h2>
+
+    <!-- Current search filters summary -->
+    <div class="search-summary mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                @if (!string.IsNullOrEmpty(ViewBag.Query))
+                {
+                    <span class="badge bg-primary me-2">Từ khóa: @ViewBag.Query</span>
+                }
+                @if (ViewBag.GenreId > 0)
+                {
+                    @* Fixed lambda expression with dynamic ViewBag by converting to a strongly-typed collection first *@
+                    var genreId = ViewBag.GenreId;
+                    var genres = ViewBag.Genres as IEnumerable<Mangareading.Models.Genre>;
+                    var selectedGenre = genres?.FirstOrDefault(g => g.GenreId == genreId);
+                    var genreName = selectedGenre?.GenreName ?? "Unknown";
+                    <span class="badge bg-info me-2">Thể loại: @genreName</span>
+                }
+                @if (!string.IsNullOrEmpty(ViewBag.Status))
+                {
+                    <span class="badge bg-secondary me-2">Trạng thái: @ViewBag.Status</span>
+                }
+                <span class="badge bg-light text-dark">Sắp xếp: @GetSortName(ViewBag.SortBy)</span>
+            </div>
+
+            <div>
+                <a href="@Url.Action("Advanced", "Search")" class="btn btn-sm btn-outline-primary">Tùy chỉnh tìm kiếm</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar mb-4 p-3 rounded" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
+        <form id="filter-form" action="@Url.Action("Results", "Search")" method="get" class="row g-3">
+            <!-- Preserve the current search query -->
+            <input type="hidden" name="query" value="@ViewBag.Query" />
+
+            <div class="col-md-3">
+                <label for="sortBy" class="form-label">Sắp xếp theo</label>
+                <select name="sortBy" id="sortBy" class="form-select" onchange="this.form.submit()">
+                    @* Fixed tag helper option syntax by moving C# logic outside *@
+                    @{ var isSortLatest = ViewBag.SortBy == "latest"; }
+                    <option value="latest" selected="@isSortLatest">Mới cập nhật</option>
+
+                    @{ var isSortPopularity = ViewBag.SortBy == "popularity"; }
+                    <option value="popularity" selected="@isSortPopularity">Phổ biến nhất</option>
+
+                    @{ var isSortTitle = ViewBag.SortBy == "title"; }
+                    <option value="title" selected="@isSortTitle">Tên truyện (A-Z)</option>
+
+                    @{ var isSortOldest = ViewBag.SortBy == "oldest"; }
+                    <option value="oldest" selected="@isSortOldest">Cũ nhất</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="genreId" class="form-label">Thể loại</label>
+                <select name="genreId" id="genreId" class="form-select" onchange="this.form.submit()">
+                    <option value="0">Tất cả thể loại</option>
+                    @foreach (var genre in ViewBag.Genres)
+                    {
+                        @* Fixed option selected attribute using proper tag helper syntax *@
+                        var isSelected = ViewBag.GenreId == genre.GenreId;
+                        <option value="@genre.GenreId" selected="@isSelected">@genre.GenreName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="status" class="form-label">Trạng thái</label>
+                <select name="status" id="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">Tất cả trạng thái</option>
+
+                    @{ var isOngoing = ViewBag.Status == "Ongoing"; }
+                    <option value="Ongoing" selected="@isOngoing">Đang tiến hành</option>
+
+                    @{ var isCompleted = ViewBag.Status == "Completed"; }
+                    <option value="Completed" selected="@isCompleted">Hoàn thành</option>
+
+                    @{ var isHiatus = ViewBag.Status == "Hiatus"; }
+                    <option value="Hiatus" selected="@isHiatus">Tạm ngưng</option>
+
+                    @{ var isCanceled = ViewBag.Status == "Canceled"; }
+                    <option value="Canceled" selected="@isCanceled">Đã hủy</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label invisible">Search</label>
+                <button type="submit" class="btn btn-primary w-100">Áp dụng bộ lọc</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results count -->
+    <div class="results-count mb-3">
+        <p>Tìm thấy <strong>@Model.Count()</strong> kết quả</p>
+    </div>
+
+    <!-- Result list -->
+    @if (Model.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-5 g-4">
+            @foreach (var manga in Model)
+            {
+                <div class="col">
+                    <div class="card h-100">
+                        <a href="@Url.Action("Details", "Manga", new { id = manga.MangaId })">
+                            <div class="card-img-container">
+                                <img src="@(string.IsNullOrEmpty(manga.CoverUrl) ? "/images/no-cover.png" : manga.CoverUrl)" 
+                                     class="card-img-top" 
+                                     alt="@manga.Title" 
+                                     loading="lazy" 
+                                     onerror="this.onerror=null; this.src='/images/no-cover.png';">
+                            </div>
+                        </a>
+                        <div class="card-body">
+                            <h5 class="card-title text-truncate">
+                                <a href="@Url.Action("Details", "Manga", new { id = manga.MangaId })" class="text-decoration-none" style="color: var(--text-color);">
+                                    @manga.Title
+                                </a>
+                            </h5>
+                            <p class="card-text small">
+                                <span class="badge bg-@GetStatusColor(manga.Status)">@manga.Status</span>
+                                @if (manga.MangaGenres != null && manga.MangaGenres.Any())
+                                {
+                                    <span class="badge bg-info">@manga.MangaGenres.First().Genre.GenreName</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            <small class="text-muted">Cập nhật: @manga.UpdatedAt.ToString("dd/MM/yyyy")</small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (ViewBag.TotalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    @if (ViewBag.CurrentPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Results", "Search", new { query = ViewBag.Query, sortBy = ViewBag.SortBy, genreId = ViewBag.GenreId, status = ViewBag.Status, page = ViewBag.CurrentPage - 1 })">
+                                Previous
+                            </a>
+                        </li>
+                    }
+
+                    @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+                    {
+                        var isActive = i == ViewBag.CurrentPage;
+                        <li class="page-item @(isActive ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Results", "Search", new { query = ViewBag.Query, sortBy = ViewBag.SortBy, genreId = ViewBag.GenreId, status = ViewBag.Status, page = i })">
+                                @i
+                            </a>
+                        </li>
+                    }
+
+                    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Results", "Search", new { query = ViewBag.Query, sortBy = ViewBag.SortBy, genreId = ViewBag.GenreId, status = ViewBag.Status, page = ViewBag.CurrentPage + 1 })">
+                                Next
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info" role="alert">
+            Không tìm thấy kết quả phù hợp. Vui lòng thử lại với từ khóa khác.
+        </div>
+    }
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/components/manga-card.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/filter-bar.css" asp-append-version="true" />
+    <style>
+        .card-img-top {
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .filter-bar {
+            border-left: 4px solid var(--primary-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .search-summary {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .filter-item {
+            background-color: var(--bg-color-secondary);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-item:hover {
+            background-color: var(--bg-color-hover);
+        }
+    </style>
+}
+
+@functions {
+    string GetSortName(string sortBy)
+    {
+        switch (sortBy)
+        {
+            case "title":
+                return "Tên truyện (A-Z)";
+            case "popularity":
+                return "Phổ biến nhất";
+            case "oldest":
+                return "Cũ nhất";
+            case "latest":
+            default:
+                return "Mới cập nhật";
+        }
+    }
+
+    string GetStatusColor(string status)
+    {
+        switch (status)
+        {
+            case "Ongoing":
+                return "success";
+            case "Completed":
+                return "primary";
+            case "Hiatus":
+                return "warning";
+            case "Canceled":
+                return "danger";
+            default:
+                return "secondary";
+        }
+    }
+}

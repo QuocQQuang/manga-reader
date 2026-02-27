@@ -1,0 +1,105 @@
+/**
+ * Theme Preload
+ * Defines critical color variables before page load to prevent flash of unstyled content
+ */
+
+:root {
+    /* Base colors for light theme */
+    --bg-color: #f3f4f6;
+    --bg-color-secondary: #e5e7eb;
+    --bg-color-tertiary: #d1d5db;
+    --bg-color-hover: #e5e7eb;
+    --card-bg: #ffffff;
+    --text-color: #1f2937;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --primary-color: #6366f1;
+    --navbar-bg: #ffffff;
+    --navbar-text: #1f2937;
+    --footer-bg: #ffffff;
+    --footer-text: #1f2937;
+    --input-bg: #ffffff;
+    --input-text: #1f2937;
+}
+
+/* Apply dark theme if user preference is dark */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Base colors for dark theme */
+        --bg-color: #111827;
+        --bg-color-secondary: #1f2937;
+        --bg-color-tertiary: #374151;
+        --bg-color-hover: #374151;
+        --card-bg: #1f2937;
+        --text-color: #e5e7eb;
+        --text-muted: #9ca3af;
+        --border-color: #374151;
+        --primary-color: #818cf8;
+        --navbar-bg: #1f2937;
+        --navbar-text: #e5e7eb;
+        --footer-bg: #1f2937;
+        --footer-text: #e5e7eb;
+        --input-bg: #374151;
+        --input-text: #e5e7eb;
+    }
+}
+
+/* Override with saved theme if available */
+[data-theme="light"] {
+    --bg-color: #f3f4f6;
+    --bg-color-secondary: #e5e7eb;
+    --bg-color-tertiary: #d1d5db;
+    --bg-color-hover: #e5e7eb;
+    --card-bg: #ffffff;
+    --text-color: #1f2937;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --primary-color: #6366f1;
+    --navbar-bg: #ffffff;
+    --navbar-text: #1f2937;
+    --footer-bg: #ffffff;
+    --footer-text: #1f2937;
+    --input-bg: #ffffff;
+    --input-text: #1f2937;
+}
+
+[data-theme="dark"] {
+    --bg-color: #111827;
+    --bg-color-secondary: #1f2937;
+    --bg-color-tertiary: #374151;
+    --bg-color-hover: #374151;
+    --card-bg: #1f2937;
+    --text-color: #e5e7eb;
+    --text-muted: #9ca3af;
+    --border-color: #374151;
+    --primary-color: #818cf8;
+    --navbar-bg: #1f2937;
+    --navbar-text: #e5e7eb;
+    --footer-bg: #1f2937;
+    --footer-text: #e5e7eb;
+    --input-bg: #374151;
+    --input-text: #e5e7eb;
+}
+
+/* Apply base styles to body and html */
+html, body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* Critical components that need immediate styling */
+.navbar {
+    background-color: var(--navbar-bg);
+    color: var(--navbar-text);
+}
+
+.card {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+footer {
+    background-color: var(--footer-bg);
+    color: var(--footer-text);
+}

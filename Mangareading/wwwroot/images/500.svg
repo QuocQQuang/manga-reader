@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Animation Definitions -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5f5ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ebebfa;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background with subtle gradient -->
+  <rect width="600" height="400" fill="url(#bgGradient)" rx="15" ry="15" />
+  
+  <!-- Decorative elements -->
+  <g id="decorativeElements">
+    <!-- Circuit patterns -->
+    <path d="M50,50 h30 v30 h30 v30 h-60 z" fill="none" stroke="#8080E0" stroke-width="2" stroke-opacity="0.3" />
+    <path d="M490,320 h40 v-30 h-20 v-30 h-20 z" fill="none" stroke="#8080E0" stroke-width="2" stroke-opacity="0.3" />
+    <path d="M60,280 h40 v30 h30" fill="none" stroke="#8080E0" stroke-width="2" stroke-opacity="0.3" />
+    <path d="M540,80 h-40 v30 h-30" fill="none" stroke="#8080E0" stroke-width="2" stroke-opacity="0.3" />
+    
+    <!-- Dots representing data nodes -->
+    <g>
+      <circle cx="50" cy="50" r="5" fill="#8080E0" opacity="0.7">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="530" cy="350" r="5" fill="#8080E0" opacity="0.7">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="80" cy="310" r="5" fill="#8080E0" opacity="0.7">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="530" cy="80" r="5" fill="#8080E0" opacity="0.7">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="1.8s" repeatCount="indefinite" />
+      </circle>
+    </g>
+  </g>
+  
+  <!-- 500 Text with shadows -->
+  <g id="errorText">
+    <text x="300" y="180" font-family="'Segoe UI', Roboto, Arial" font-size="130" font-weight="900" fill="#A5A5E8" text-anchor="middle" letter-spacing="-2">500</text>
+    <text x="303" y="183" font-family="'Segoe UI', Roboto, Arial" font-size="130" font-weight="900" fill="#6A6AD9" text-anchor="middle" letter-spacing="-2">500</text>
+  </g>
+  
+  <!-- Server rack with blinking lights -->
+  <g transform="translate(300, 240)">
+    <g>
+      <!-- Server chassis -->
+      <rect x="-60" y="-40" width="120" height="80" rx="5" ry="5" fill="#FFFFFF" stroke="#6A6AD9" stroke-width="2" />
+      
+      <!-- Server divider lines -->
+      <line x1="-60" y1="-15" x2="60" y2="-15" stroke="#6A6AD9" stroke-width="1" stroke-opacity="0.5" />
+      <line x1="-60" y1="10" x2="60" y2="10" stroke="#6A6AD9" stroke-width="1" stroke-opacity="0.5" />
+      
+      <!-- Server front details -->
+      <rect x="-50" y="-35" width="30" height="15" rx="2" ry="2" fill="#F0F0FF" stroke="#6A6AD9" stroke-width="1" />
+      <rect x="20" y="-35" width="30" height="15" rx="2" ry="2" fill="#F0F0FF" stroke="#6A6AD9" stroke-width="1" />
+      
+      <rect x="-50" y="-10" width="30" height="15" rx="2" ry="2" fill="#F0F0FF" stroke="#6A6AD9" stroke-width="1" />
+      <rect x="20" y="-10" width="30" height="15" rx="2" ry="2" fill="#F0F0FF" stroke="#6A6AD9" stroke-width="1" />
+      
+      <rect x="-50" y="15" width="30" height="15" rx="2" ry="2" fill="#F0F0FF" stroke="#6A6AD9" stroke-width="1" />
+      <rect x="20" y="15" width="30" height="15" rx="2" ry="2" fill="#F0F0FF" stroke="#6A6AD9" stroke-width="1" />
+      
+      <!-- Blinking server lights -->
+      <circle cx="-40" cy="-27" r="3" fill="#FF5555">
+        <animate attributeName="fill" values="#FF5555;#FF0000;#FF5555" dur="0.5s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="-30" cy="-27" r="3" fill="#FFAA55">
+        <animate attributeName="fill" values="#FFAA55;#FF7700;#FFAA55" dur="1s" repeatCount="indefinite" />
+      </circle>
+      
+      <circle cx="30" cy="-27" r="3" fill="#FF5555">
+        <animate attributeName="fill" values="#FF5555;#FF0000;#FF5555" dur="0.7s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="40" cy="-27" r="3" fill="#55FF55">
+        <animate attributeName="opacity" values="0.7;0;0.7" dur="2s" repeatCount="indefinite" />
+      </circle>
+      
+      <circle cx="-40" cy="-2" r="3" fill="#55FF55">
+        <animate attributeName="opacity" values="0.7;0;0.7" dur="1.5s" repeatCount="indefinite" />
+      </circle>
+      
+      <circle cx="40" cy="23" r="3" fill="#FF5555">
+        <animate attributeName="fill" values="#FF5555;#FF0000;#FF5555" dur="0.3s" repeatCount="indefinite" />
+      </circle>
+      
+      <animateTransform attributeName="transform" type="translate" values="0,-2;0,2;0,-2" dur="4s" repeatCount="indefinite" />
+    </g>
+  </g>
+  
+  <!-- Error message with better typography -->
+  <g id="errorMessage">
+    <rect x="150" y="305" width="300" height="40" rx="20" ry="20" fill="#6A6AD9" opacity="0.1" />
+    <text x="300" y="330" font-family="'Segoe UI', Roboto, Arial" font-size="20" font-weight="500" fill="#343A40" text-anchor="middle">Lỗi máy chủ</text>
+  </g>
+</svg>

@@ -1,0 +1,172 @@
+/* 
+ * Toast Notification Component Styles
+ * Reusable toast notification component for the Manga Reader application
+ */
+
+/* Import theme variables */
+@import '../themes/theme.css';
+
+/* Toast container */
+.toast-container {
+    position: fixed;
+    bottom: var(--spacing-md);
+    right: var(--spacing-md);
+    z-index: var(--z-index-toast);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    max-width: 350px;
+    width: 100%;
+}
+
+/* Toast notification */
+.toast {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color);
+    overflow: hidden;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all var(--transition-speed-normal) ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Toast header */
+.toast-header {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.toast-icon {
+    margin-right: var(--spacing-sm);
+    font-size: var(--font-size-lg);
+}
+
+.toast-title {
+    font-weight: var(--font-weight-semibold);
+    flex: 1;
+    margin: 0;
+}
+
+.toast-time {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: var(--font-size-lg);
+    padding: 0;
+    margin-left: var(--spacing-sm);
+    line-height: 1;
+}
+
+.toast-close:hover {
+    color: var(--text-color);
+}
+
+/* Toast body */
+.toast-body {
+    padding: var(--spacing-md);
+    font-size: var(--font-size-sm);
+}
+
+/* Toast progress bar */
+.toast-progress {
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.2);
+    width: 100%;
+}
+
+.toast-progress-bar {
+    height: 100%;
+    width: 100%;
+    transform-origin: left;
+    animation: toast-progress var(--toast-duration, 5s) linear forwards;
+}
+
+/* Toast variants */
+.toast-info {
+    border-left: 4px solid var(--info-color);
+}
+
+.toast-info .toast-icon {
+    color: var(--info-color);
+}
+
+.toast-info .toast-progress-bar {
+    background-color: var(--info-color);
+}
+
+.toast-success {
+    border-left: 4px solid var(--success-color);
+}
+
+.toast-success .toast-icon {
+    color: var(--success-color);
+}
+
+.toast-success .toast-progress-bar {
+    background-color: var(--success-color);
+}
+
+.toast-warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.toast-warning .toast-icon {
+    color: var(--warning-color);
+}
+
+.toast-warning .toast-progress-bar {
+    background-color: var(--warning-color);
+}
+
+.toast-danger {
+    border-left: 4px solid var(--danger-color);
+}
+
+.toast-danger .toast-icon {
+    color: var(--danger-color);
+}
+
+.toast-danger .toast-progress-bar {
+    background-color: var(--danger-color);
+}
+
+/* Animations */
+@keyframes toast-progress {
+    from {
+        transform: scaleX(1);
+    }
+    to {
+        transform: scaleX(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .toast-container {
+        bottom: 0;
+        right: 0;
+        left: 0;
+        max-width: 100%;
+        padding: var(--spacing-sm);
+    }
+    
+    .toast {
+        max-width: 100%;
+    }
+}

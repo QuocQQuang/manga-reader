@@ -1,0 +1,572 @@
+@model Mangareading.Models.ProfileViewModel
+@{
+    ViewData["Title"] = "Hồ sơ người dùng";
+    var updateModel = new ProfileUpdateViewModel { Email = Model.Email, AvatarUrl = Model.AvatarUrl };
+    string activeTab = "profile-tab"; // Default to info tab initially
+    if (!ViewData.ModelState.IsValid)
+    {
+        if (ViewData.ModelState.Keys.Any(k => k.Contains("Password")))
+        {
+            activeTab = "password-tab";
+        }
+        else if (ViewData.ModelState.Keys.Any(k => k == nameof(updateModel.Email) || k == nameof(updateModel.AvatarUrl)))
+        {
+            activeTab = "update-profile-tab";
+        }
+    }
+}
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+@section Styles {
+    <style>
+        .profile-avatar-container {
+            position: relative;
+            display: inline-block; /* To fit content */
+        }
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border: 4px solid var(--bs-border-color-translucent);
+            transition: border-color 0.3s ease;
+        }
+        .profile-avatar:hover {
+             border-color: var(--bs-primary);
+        }
+        .profile-details dt {
+            font-weight: 600; /* Slightly bolder */
+            color: var(--bs-secondary-color);
+        }
+        .form-floating > label {
+             color: var(--bs-secondary-color);
+        }
+         .form-floating > .form-control:focus ~ label,
+        .form-floating > .form-control:not(:placeholder-shown) ~ label,
+        .form-floating > .form-select ~ label {
+            color: var(--bs-primary); /* Change floating label color on focus/filled */
+        }
+         /* Align validation message better with floating labels */
+        .form-floating .text-danger {
+            padding-left: 0.75rem;
+            font-size: 0.8em;
+        }
+        .input-group .btn {
+            height: calc(3.5rem + 2px); /* Match floating input height */
+        }
+        /* Style for displaying current email/avatar */
+        #currentEmailDisplay, #currentAvatarDisplay img {
+            vertical-align: middle;
+        }
+        #currentAvatarDisplay img {
+            max-width: 38px; /* Roughly match input height */
+            max-height: 38px;
+            margin-left: 5px;
+            border-radius: 50%;
+        }
+        /* Avatar Upload Styles */
+        #avatarDropZone {
+            border: 2px dashed var(--bs-border-color);
+            border-radius: .375rem; /* Match Bootstrap's input radius */
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            background-color: var(--bs-tertiary-bg);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            position: relative; /* For spinner positioning */
+        }
+        #avatarDropZone.dragover {
+            background-color: var(--bs-primary-bg-subtle);
+            border-color: var(--bs-primary);
+        }
+        #avatarPreview {
+            max-width: 100px;
+            max-height: 100px;
+            margin-top: 1rem;
+            display: none; /* Hidden by default */
+             object-fit: cover;
+        }
+        #avatarUploadSpinner {
+            display: none; /* Hidden by default */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2rem;
+            height: 2rem;
+        }
+        /* Hide dropzone content when spinner is active */
+        #avatarDropZone.uploading > *:not(#avatarUploadSpinner) {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+    </style>
+}
+
+<div class="container mt-4 mb-5">
+    <h2 class="mb-4"><i class="fas fa-user-cog me-2"></i>@ViewData["Title"]</h2>
+
+    <ul class="nav nav-pills nav-fill mb-4" id="profileTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(activeTab == "profile-tab" ? "active" : "")" id="profile-tab-btn" data-bs-toggle="pill" data-bs-target="#profile-tab-content" type="button" role="tab" aria-controls="profile-tab-content" aria-selected="@(activeTab == "profile-tab")"> <i class="fas fa-id-card me-2"></i>Thông tin</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(activeTab == "update-profile-tab" ? "active" : "")" id="update-profile-tab-btn" data-bs-toggle="pill" data-bs-target="#update-profile-tab-content" type="button" role="tab" aria-controls="update-profile-tab-content" aria-selected="@(activeTab == "update-profile-tab")"><i class="fas fa-edit me-2"></i>Cập nhật thông tin</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(activeTab == "password-tab" ? "active" : "")" id="password-tab-btn" data-bs-toggle="pill" data-bs-target="#password-tab-content" type="button" role="tab" aria-controls="password-tab-content" aria-selected="@(activeTab == "password-tab")"><i class="fas fa-key me-2"></i>Đổi mật khẩu</button>
+        </li>
+    </ul>
+
+    <div class="tab-content card shadow-sm" id="profileTabContentContainer">
+        <!-- Profile Info Tab -->
+        <div class="tab-pane fade @(activeTab == "profile-tab" ? "show active" : "") p-4" id="profile-tab-content" role="tabpanel" aria-labelledby="profile-tab-btn">
+             <div class="row align-items-center">
+                 <div class="col-md-4 text-center mb-4 mb-md-0 border-end pe-md-4">
+                     <div class="profile-avatar-container mb-3">
+                         @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                         {
+                             <img id="profileInfoAvatar" src="@Model.AvatarUrl" alt="Ảnh đại diện" class="profile-avatar rounded-circle shadow" />
+                         }
+                         else
+                         {
+                             <div id="profileInfoAvatarPlaceholder" class="profile-avatar rounded-circle shadow bg-light d-flex justify-content-center align-items-center text-secondary">
+                                 <i class="fas fa-user fa-4x"></i>
+                             </div>
+                         }
+                     </div>
+                     <h4 class="mt-2 mb-1">@Model.Username</h4>
+                      @if(Model.IsAdmin)
+                        {
+                            <span class="badge rounded-pill bg-danger"><i class="fas fa-shield-alt me-1"></i>Quản trị viên</span>
+                        }
+                         else
+                        {
+                             <span class="badge rounded-pill bg-info"><i class="fas fa-user me-1"></i>Thành viên</span>
+                        }
+                 </div>
+                 <div class="col-md-8 ps-md-4 profile-details">
+                    <h5 class="mb-3 text-primary">Chi tiết tài khoản</h5>
+                    <dl class="row mb-0 gy-2">
+                        <dt class="col-sm-4"><i class="fas fa-envelope me-2 text-muted"></i>Email:</dt>
+                        <dd class="col-sm-8" id="profileInfoEmail">@Model.Email</dd>
+
+                        <dt class="col-sm-4"><i class="fas fa-calendar-alt me-2 text-muted"></i>Ngày tham gia:</dt>
+                        <dd class="col-sm-8">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                        <dt class="col-sm-4"><i class="fas fa-palette me-2 text-muted"></i>Giao diện:</dt>
+                        <dd class="col-sm-8">@(Model.ThemePreference == "dark" ? "Tối" : "Sáng")</dd>
+
+                         <dt class="col-sm-4"><i class="fas fa-toggle-on me-2 text-muted"></i>Trạng thái:</dt>
+                         <dd class="col-sm-8">
+                            @if(Model.IsActive)
+                            {
+                                 <span class="badge rounded-pill bg-success">Hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge rounded-pill bg-secondary">Bị khóa</span>
+                            }
+                         </dd>
+                    </dl>
+                </div>
+             </div>
+        </div>
+
+        <!-- Update Profile Tab -->
+        <div class="tab-pane fade @(activeTab == "update-profile-tab" ? "show active" : "") p-4" id="update-profile-tab-content" role="tabpanel" aria-labelledby="update-profile-tab-btn">
+             <h4 class="mb-4 text-primary border-bottom pb-2">Cập nhật thông tin</h4>
+             <div class="row g-3">
+                 <div asp-validation-summary="ModelOnly" class="alert alert-danger col-12" role="alert" style="display:none;"></div> <!-- Hide summary initially -->
+
+                 <!-- Email Update -->
+                <div class="col-12">
+                    <label for="floatingEmailInput" class="form-label">Cập nhật Email</label>
+                    <div class="input-group">
+                         <div class="form-floating flex-grow-1">
+                             <input type="email" class="form-control" id="floatingEmailInput" placeholder="name@example.com" value="@Model.Email"/>
+                            <label for="floatingEmailInput"><i class="fas fa-envelope me-1"></i>Email</label>
+                         </div>
+                         <button class="btn btn-outline-primary" type="button" id="saveEmailBtn">
+                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                             <i class="fas fa-save me-1"></i>Lưu Email
+                         </button>
+                    </div>
+                     <div id="emailValidation" class="text-danger small mt-1"></div> <!-- Placeholder for validation message -->
+                 </div>
+
+                <!-- Avatar Update -->
+                 <div class="col-12">
+                    <label for="floatingAvatarUrlInput" class="form-label">Cập nhật Ảnh đại diện</label>
+                    <!-- Upload Section -->
+                     <div class="mb-3">
+                         <input type="file" id="avatarUploadInput" accept="image/png, image/jpeg, image/gif" style="display: none;">
+                         <div id="avatarDropZone">
+                             <div id="avatarUploadSpinner" class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Đang tải lên...</span>
+                             </div>
+                             <div> <!-- Container for content, to hide during upload -->
+                                 <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i><br>
+                                 Kéo thả ảnh vào đây hoặc <a href="#" onclick="document.getElementById('avatarUploadInput').click(); return false;">nhấn để chọn file</a>.
+                                 <img id="avatarPreview" class="img-thumbnail rounded-circle shadow-sm" alt="Xem trước ảnh đại diện" />
+                             </div>
+                         </div>
+                     </div>
+                     <!-- URL Input & Save -->
+                     <div class="input-group">
+                         <div class="form-floating flex-grow-1">
+                            <input type="url" class="form-control" id="floatingAvatarUrlInput" placeholder="Dán URL ảnh/Imgur hoặc tải lên" value="@Model.AvatarUrl"/>
+                            <label for="floatingAvatarUrlInput"><i class="fas fa-link me-1"></i>URL Ảnh đại diện</label>
+                        </div>
+                        <button class="btn btn-outline-primary" type="button" id="saveAvatarBtn">
+                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                             <i class="fas fa-save me-1"></i>Lưu Avatar
+                         </button>
+                     </div>
+                      <div id="avatarValidation" class="text-danger small mt-1"></div> <!-- Placeholder for validation message -->
+                 </div>
+
+                 <!-- Separator -->
+                  <div class="col-12"><hr class="my-4"></div>
+
+                 <div class="col-12 fst-italic text-muted small">
+                     Lưu ý: Sau khi tải ảnh lên, URL sẽ tự động điền vào ô bên dưới. Bạn cần nhấn "Lưu Avatar" để cập nhật.
+                 </div>
+            </div>
+        </div>
+
+        <!-- Change Password Tab -->
+        <div class="tab-pane fade @(activeTab == "password-tab" ? "show active" : "") p-4" id="password-tab-content" role="tabpanel" aria-labelledby="password-tab-btn">
+            <h4 class="mb-4 text-primary border-bottom pb-2">Đổi mật khẩu</h4>
+             <div class="row g-3" id="changePasswordForm">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger col-12" role="alert" style="display:none;"></div> <!-- Hide summary initially -->
+
+                 <div class="col-12 form-floating mb-1">
+                    <input name="CurrentPassword" type="password" class="form-control" id="floatingCurrentPassword" placeholder="Mật khẩu hiện tại" required/>
+                    <label for="floatingCurrentPassword"><i class="fas fa-lock me-1"></i>Mật khẩu hiện tại</label>
+                     <div id="currentPasswordValidation" class="text-danger small mt-1"></div>
+                </div>
+
+                <div class="col-md-6 form-floating mb-1">
+                    <input name="NewPassword" type="password" class="form-control" id="floatingNewPassword" placeholder="Mật khẩu mới" required minlength="6"/>
+                    <label for="floatingNewPassword"><i class="fas fa-key me-1"></i>Mật khẩu mới</label>
+                     <div id="newPasswordValidation" class="text-danger small mt-1"></div>
+                </div>
+
+                 <div class="col-md-6 form-floating mb-1">
+                    <input name="ConfirmPassword" type="password" class="form-control" id="floatingConfirmPassword" placeholder="Xác nhận mật khẩu mới" required data-compare-target="#floatingNewPassword"/>
+                    <label for="floatingConfirmPassword"><i class="fas fa-key me-1"></i>Xác nhận mật khẩu mới</label>
+                     <div id="confirmPasswordValidation" class="text-danger small mt-1"></div>
+                </div>
+
+                 <div class="col-12 text-end mt-3">
+                    <button type="button" class="btn btn-warning" id="changePasswordBtn">
+                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                         <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                    </button>
+                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // --- Constants and Initial Setup ---
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB (match backend)
+        const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
+        const csrfToken = '@Antiforgery.GetAndStoreTokens(Context).RequestToken';
+
+        // --- DOM Element Selectors ---
+        // Info Tab Elements
+        const profileInfoAvatar = document.getElementById('profileInfoAvatar');
+        const profileInfoAvatarPlaceholder = document.getElementById('profileInfoAvatarPlaceholder');
+        const profileInfoEmail = document.getElementById('profileInfoEmail');
+        // Update Tab Elements
+        const emailInput = document.getElementById('floatingEmailInput');
+        const saveEmailBtn = document.getElementById('saveEmailBtn');
+        const emailValidation = document.getElementById('emailValidation');
+        const avatarUrlInput = document.getElementById('floatingAvatarUrlInput');
+        const saveAvatarBtn = document.getElementById('saveAvatarBtn');
+        const avatarValidation = document.getElementById('avatarValidation');
+        const avatarDropZone = document.getElementById('avatarDropZone');
+        const avatarUploadInput = document.getElementById('avatarUploadInput');
+        const avatarPreview = document.getElementById('avatarPreview');
+        const avatarUploadSpinner = document.getElementById('avatarUploadSpinner');
+        // Password Tab Elements
+        const currentPasswordInput = document.getElementById('floatingCurrentPassword');
+        const newPasswordInput = document.getElementById('floatingNewPassword');
+        const confirmPasswordInput = document.getElementById('floatingConfirmPassword');
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        const currentPasswordValidation = document.getElementById('currentPasswordValidation');
+        const newPasswordValidation = document.getElementById('newPasswordValidation');
+        const confirmPasswordValidation = document.getElementById('confirmPasswordValidation');
+
+        // --- Helper Functions ---
+        function showLoading(button) {
+            button.disabled = true;
+            const spinner = button.querySelector('.spinner-border');
+            if (spinner) spinner.style.display = 'inline-block';
+            const icon = button.querySelector('i'); // Hide icon if present
+            if(icon) icon.style.display = 'none';
+        }
+        function hideLoading(button) {
+            button.disabled = false;
+            const spinner = button.querySelector('.spinner-border');
+            if (spinner) spinner.style.display = 'none';
+            const icon = button.querySelector('i'); // Show icon
+             if(icon) icon.style.display = 'inline-block';
+        }
+         function showValidationError(element, message) {
+            if (element) {
+                 element.textContent = message;
+                 element.style.display = 'block';
+            }
+        }
+        function clearValidationError(element) {
+             if (element) {
+                 element.textContent = '';
+                 element.style.display = 'none';
+             }
+        }
+         function clearPasswordFields() {
+            currentPasswordInput.value = '';
+            newPasswordInput.value = '';
+            confirmPasswordInput.value = '';
+             clearValidationError(currentPasswordValidation);
+            clearValidationError(newPasswordValidation);
+            clearValidationError(confirmPasswordValidation);
+         }
+        // --- Avatar Upload Helpers ---
+         function showUploadSpinner() {
+             avatarUploadSpinner.style.display = 'block';
+             avatarDropZone.classList.add('uploading');
+         }
+        function hideUploadSpinner() {
+            avatarUploadSpinner.style.display = 'none';
+            avatarDropZone.classList.remove('uploading');
+        }
+        function showPreview(file) {
+            if (file && ALLOWED_TYPES.includes(file.type)) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    avatarPreview.src = e.target.result;
+                    avatarPreview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                 avatarPreview.style.display = 'none';
+                 avatarPreview.src = '#';
+            }
+        }
+
+        // --- API Call Function ---
+        async function callApi(endpoint, method, body) {
+            showLoading(document.activeElement); // Show loading on the clicked button
+            try {
+                const response = await fetch(endpoint, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': csrfToken
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                const responseData = await response.json(); // Try parsing JSON regardless of status
+
+                if (!response.ok) {
+                     // Use message from response if available, otherwise generate default
+                    const errorMessage = responseData?.message || `Lỗi ${response.status}: ${response.statusText}`;
+                    throw new Error(errorMessage);
+                }
+                return responseData; // Return data on success
+            }
+            finally {
+                 hideLoading(document.activeElement);
+            }
+        }
+
+        // --- Event Listeners ---
+        $(document).ready(function () {
+
+            // ** Save Email **
+            saveEmailBtn.addEventListener('click', async () => {
+                 clearValidationError(emailValidation);
+                const newEmail = emailInput.value.trim();
+                if (!newEmail) {
+                    showValidationError(emailValidation, 'Email không được để trống.');
+                    return;
+                }
+                // Basic email format check (more robust validation happens server-side)
+                if (!/^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test(newEmail)) {
+                    showValidationError(emailValidation, 'Định dạng email không hợp lệ.');
+                    return;
+                }
+
+                try {
+                    const data = await callApi('/api/account/email', 'PUT', { newEmail: newEmail });
+                    showToast(data.message || 'Cập nhật email thành công!', 'success');
+                    profileInfoEmail.textContent = newEmail; // Update info tab
+                } catch (error) {
+                    showToast(`Lỗi cập nhật email: ${error.message}`, 'error');
+                    showValidationError(emailValidation, error.message); // Show error near input too
+                }
+            });
+
+            // ** Save Avatar **
+            saveAvatarBtn.addEventListener('click', async () => {
+                 clearValidationError(avatarValidation);
+                const newAvatarUrl = avatarUrlInput.value.trim();
+
+                 // Basic URL check (or empty allowed)
+                if (newAvatarUrl && !/^https?:\/\/.+/.test(newAvatarUrl)) {
+                    showValidationError(avatarValidation, 'URL ảnh đại diện không hợp lệ.');
+                    return;
+                }
+
+                try {
+                    const data = await callApi('/api/account/avatar', 'PUT', { newAvatarUrl: newAvatarUrl || null }); // Send null if empty
+                    showToast(data.message || 'Cập nhật ảnh đại diện thành công!', 'success');
+                    // Update info tab avatar
+                    if (data.newAvatarUrl) {
+                        if (profileInfoAvatar) profileInfoAvatar.src = data.newAvatarUrl;
+                        if(profileInfoAvatarPlaceholder) profileInfoAvatarPlaceholder.style.display = 'none';
+                         if (profileInfoAvatar) profileInfoAvatar.style.display = 'block';
+                    } else {
+                         if (profileInfoAvatar) profileInfoAvatar.style.display = 'none';
+                         if(profileInfoAvatarPlaceholder) profileInfoAvatarPlaceholder.style.display = 'flex'; // Or block
+                    }
+                } catch (error) {
+                    showToast(`Lỗi cập nhật avatar: ${error.message}`, 'error');
+                    showValidationError(avatarValidation, error.message);
+                }
+            });
+
+            // ** Change Password **
+            changePasswordBtn.addEventListener('click', async () => {
+                 clearValidationError(currentPasswordValidation);
+                 clearValidationError(newPasswordValidation);
+                 clearValidationError(confirmPasswordValidation);
+                 let isValid = true;
+
+                const currentPassword = currentPasswordInput.value;
+                const newPassword = newPasswordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
+                if (!currentPassword) { showValidationError(currentPasswordValidation, 'Mật khẩu hiện tại là bắt buộc.'); isValid = false; }
+                if (!newPassword) { showValidationError(newPasswordValidation, 'Mật khẩu mới là bắt buộc.'); isValid = false; }
+                 else if (newPassword.length < 6) { showValidationError(newPasswordValidation, 'Mật khẩu mới phải dài ít nhất 6 ký tự.'); isValid = false; }
+                if (!confirmPassword) { showValidationError(confirmPasswordValidation, 'Xác nhận mật khẩu mới là bắt buộc.'); isValid = false; }
+                else if (newPassword && newPassword !== confirmPassword) {
+                    showValidationError(confirmPasswordValidation, 'Mật khẩu mới và mật khẩu xác nhận không khớp.'); isValid = false;
+                }
+
+                if (!isValid) return;
+
+                try {
+                     const data = await callApi('/api/account/change-password', 'POST',
+                        { currentPassword, newPassword, confirmPassword }
+                     );
+                    showToast(data.message || 'Đổi mật khẩu thành công!', 'success');
+                    clearPasswordFields();
+                } catch (error) {
+                    showToast(error.message, 'error');
+                     // Show specific field error if possible (e.g., current password incorrect)
+                     if (error.message.toLowerCase().includes("hiện tại")) {
+                          showValidationError(currentPasswordValidation, error.message);
+                     } else {
+                         // Show general error or near button? For now, toaster is primary.
+                     }
+                }
+            });
+
+            // ** Avatar Upload Logic (Slightly Modified) **
+             avatarDropZone.addEventListener('click', (e) => {
+                if(e.target.tagName !== 'A') {
+                     avatarUploadInput.click();
+                }
+            });
+            avatarUploadInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    handleFileSelect(files[0]);
+                }
+            });
+            avatarDropZone.addEventListener('dragenter', (e) => { e.preventDefault(); e.stopPropagation(); avatarDropZone.classList.add('dragover'); });
+            avatarDropZone.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); avatarDropZone.classList.add('dragover'); e.dataTransfer.dropEffect = 'copy'; });
+            avatarDropZone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); avatarDropZone.classList.remove('dragover'); });
+            avatarDropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                avatarDropZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                 if (files.length > 0) {
+                    handleFileSelect(files[0]);
+                }
+            });
+
+            function handleFileSelect(file) {
+                 // Clear previous errors shown by Toaster if needed? (Optional)
+
+                if (!file) return;
+                if (!ALLOWED_TYPES.includes(file.type)) {
+                    showToast('Định dạng file không hợp lệ. Chỉ chấp nhận JPG, PNG, GIF.', 'error');
+                    avatarUploadInput.value = '';
+                    showPreview(null);
+                    return;
+                }
+                if (file.size > MAX_FILE_SIZE) {
+                     showToast(`Kích thước file quá lớn (tối đa ${MAX_FILE_SIZE / 1024 / 1024} MB).`, 'error');
+                    avatarUploadInput.value = '';
+                     showPreview(null);
+                    return;
+                }
+
+                showPreview(file);
+                uploadFileToServer(file);
+            }
+
+            function uploadFileToServer(file) {
+                showUploadSpinner();
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/api/upload/avatar', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': csrfToken
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.message || `Lỗi ${response.status}: ${response.statusText}`);
+                        }).catch(() => {
+                            throw new Error(`Lỗi ${response.status}: ${response.statusText}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    hideUploadSpinner();
+                    if (data.imageUrl) {
+                        avatarUrlInput.value = data.imageUrl; // Fill the input
+                        showToast('Ảnh đã tải lên. Nhấn "Lưu Avatar" để cập nhật.', 'info'); // Inform user
+                        avatarUploadInput.value = '';
+                    } else {
+                        throw new Error('Không nhận được URL ảnh từ server.');
+                    }
+                })
+                .catch(error => {
+                    hideUploadSpinner();
+                    showToast(`Lỗi tải ảnh lên: ${error.message}`, 'error');
+                     avatarUploadInput.value = '';
+                     showPreview(null);
+                });
+            }
+        });
+    </script>
+}

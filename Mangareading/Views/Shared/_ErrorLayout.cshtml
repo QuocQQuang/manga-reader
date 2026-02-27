@@ -1,0 +1,73 @@
+@model ErrorViewModel
+@{
+    var statusCode = ViewBag.StatusCode ?? 500;
+    var errorTitle = ViewBag.ErrorTitle ?? "Lỗi hệ thống";
+    var errorIcon = ViewBag.ErrorIcon ?? "fas fa-exclamation-circle";
+    var errorMessage = ViewBag.ErrorMessage ?? "Đã xảy ra lỗi!";
+    var errorDescription = ViewBag.ErrorDescription ?? "Đã xảy ra lỗi trong khi xử lý yêu cầu của bạn. Vui lòng thử lại sau.";
+    var errorImage = ViewBag.ErrorImage ?? $"/images/{statusCode}.svg";
+    var errorClass = ViewBag.ErrorClass ?? $"error-{statusCode}";
+    var alertType = ViewBag.AlertType ?? "warning";
+}
+
+<link rel="stylesheet" href="~/css/error-pages.css" />
+
+<div class="container error-page">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-8">
+            <div class="card shadow-sm error-card @errorClass">
+                <div class="card-header bg-light error-header">
+                    <h1 class="mb-0 text-center h4 error-title">
+                        <i class="@errorIcon me-2"></i>
+                        @errorTitle
+                    </h1>
+                </div>
+                <div class="card-body text-center error-body">
+                    <img src="@errorImage" alt="@errorTitle" class="img-fluid error-image"
+                         onerror="this.src='/images/empty-content.svg';">
+
+                    <h2 class="h4 mb-3 error-message">@errorMessage</h2>
+
+                    <p class="error-description">
+                        @errorDescription
+                    </p>
+
+                    @if (Model?.Message != null)
+                    {
+                        <div class="alert alert-@alertType error-alert">
+                            @Model.Message
+                        </div>
+                    }
+
+                    @if (Model?.ShowRequestId ?? false)
+                    {
+                        <p class="text-muted small mb-4">
+                            <strong>Request ID:</strong> <code>@Model.RequestId</code>
+                        </p>
+                    }
+
+                    <div class="d-flex justify-content-center gap-3 error-buttons">
+                        @if (ViewBag.CustomButtons != null)
+                        {
+                            @Html.Raw(ViewBag.CustomButtons)
+                        }
+                        else
+                        {
+                            <a href="/" class="btn btn-primary error-btn error-btn-primary">
+                                <i class="fas fa-home me-2"></i> Về Trang Chủ
+                            </a>
+                            <a href="javascript:history.back()" class="btn btn-outline-secondary error-btn error-btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i> Quay Lại
+                            </a>
+                        }
+                    </div>
+                </div>
+                <div class="card-footer text-center error-footer">
+                    <p class="mb-0 error-timestamp">
+                        <i class="fas fa-clock me-1"></i> @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,151 @@
+/* 
+ * Pagination Component Styles
+ * Reusable pagination component for the Manga Reader application
+ */
+
+/* Import theme variables */
+@import '../themes/theme.css';
+
+/* Pagination container */
+.pagination-container {
+    margin: var(--spacing-xl) 0;
+}
+
+/* Pagination list */
+.pagination {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Pagination item */
+.pagination-item {
+    margin: 0 var(--spacing-xs);
+}
+
+/* Pagination link */
+.pagination-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding: 0 var(--spacing-sm);
+    border-radius: var(--border-radius-md);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-speed-fast) ease;
+}
+
+.pagination-link:hover {
+    background-color: var(--bg-color);
+    border-color: var(--border-color-hover);
+    color: var(--primary-color);
+}
+
+/* Active pagination link */
+.pagination-item.active .pagination-link {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.pagination-item.active .pagination-link:hover {
+    background-color: var(--primary-color-hover);
+    border-color: var(--primary-color-hover);
+}
+
+/* Disabled pagination link */
+.pagination-item.disabled .pagination-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Pagination ellipsis */
+.pagination-ellipsis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    color: var(--text-muted);
+}
+
+/* Pagination icons */
+.pagination-icon {
+    font-size: var(--font-size-sm);
+}
+
+/* Pagination goto form */
+.pagination-goto {
+    margin-top: var(--spacing-md);
+    display: flex;
+    justify-content: center;
+}
+
+.pagination-goto-form {
+    display: inline-flex;
+    align-items: center;
+}
+
+.pagination-goto-label {
+    margin-right: var(--spacing-sm);
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.pagination-goto-input {
+    width: 4rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    text-align: center;
+    font-size: var(--font-size-sm);
+}
+
+.pagination-goto-input:focus {
+    outline: none;
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 3px var(--input-focus-ring);
+}
+
+.pagination-goto-button {
+    margin-left: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-md);
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color var(--transition-speed-fast) ease;
+}
+
+.pagination-goto-button:hover {
+    background-color: var(--primary-color-hover);
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .pagination-item {
+        margin: 0 var(--spacing-xs);
+    }
+    
+    .pagination-link {
+        min-width: 2rem;
+        height: 2rem;
+        font-size: var(--font-size-sm);
+    }
+    
+    /* Hide some pagination items on small screens */
+    .pagination-item.hide-on-mobile {
+        display: none;
+    }
+}

@@ -1,0 +1,162 @@
+@model Mangareading.Models.ViewModels.MangaUploadViewModel
+@{
+    ViewData["Title"] = "Tạo truyện mới";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+
+    <div class="row">
+        <div class="col-md-8">
+            <form id="createMangaForm" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <div class="form-group">
+                    <label asp-for="Title" class="control-label"></label>
+                    <input asp-for="Title" class="form-control" required />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="AlternativeTitle" class="control-label"></label>
+                    <input asp-for="AlternativeTitle" class="form-control" />
+                    <span asp-validation-for="AlternativeTitle" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Description" class="control-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="CoverFile" class="control-label"></label>
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="coverFile" name="CoverFile" accept=".jpg,.jpeg,.png,.gif">
+                        <label class="custom-file-label" for="coverFile">Chọn file...</label>
+                    </div>
+                    <small class="form-text text-muted">Kích thước tối đa: 10MB. Định dạng: JPG, PNG, GIF.</small>
+                    <div id="coverPreview" class="mt-2" style="display: none;">
+                        <img id="coverImage" src="#" alt="Ảnh bìa" class="img-thumbnail" style="max-height: 300px;" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Author" class="control-label"></label>
+                    <input asp-for="Author" class="form-control" required />
+                    <span asp-validation-for="Author" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Artist" class="control-label"></label>
+                    <input asp-for="Artist" class="form-control" required />
+                    <span asp-validation-for="Artist" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Status" class="control-label"></label>
+                    <select asp-for="Status" class="form-control" required>
+                        <option value="">-- Chọn trạng thái --</option>
+                        <option value="ongoing">Đang tiến hành</option>
+                        <option value="completed">Hoàn thành</option>
+                        <option value="hiatus">Tạm ngưng</option>
+                        <option value="cancelled">Đã hủy</option>
+                    </select>
+                    <span asp-validation-for="Status" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="PublicationYear" class="control-label"></label>
+                    <input asp-for="PublicationYear" class="form-control" type="number" min="1900" max="2100" />
+                    <span asp-validation-for="PublicationYear" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="GenreIds" class="control-label"></label>
+                    <div class="row">
+                        @foreach (var genre in ViewBag.Genres)
+                        {
+                            <div class="col-md-4">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="genre_@genre.GenreId" name="GenreIds" value="@genre.GenreId">
+                                    <label class="custom-control-label" for="genre_@genre.GenreId">@genre.GenreName</label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <span id="genreError" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Tạo truyện</button>
+                    <a asp-action="ManageManga" class="btn btn-secondary">Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Show file name when selected
+            $('.custom-file-input').on('change', function () {
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').html(fileName);
+
+                // Preview image
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        $('#coverImage').attr('src', e.target.result);
+                        $('#coverPreview').show();
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+
+            // Form submission
+            $('#createMangaForm').on('submit', function (e) {
+                e.preventDefault();
+
+                // Validate genres
+                if ($('input[name="GenreIds"]:checked').length === 0) {
+                    $('#genreError').text('Phải chọn ít nhất một thể loại.');
+                    return;
+                } else {
+                    $('#genreError').text('');
+                }
+
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: '/api/manga-upload/create',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    beforeSend: function () {
+                        // Show loading indicator
+                        $('button[type="submit"]').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                    },
+                    success: function (result) {
+                        // Redirect to manage page
+                        showToast('Tạo truyện thành công', 'success');
+                        setTimeout(function () {
+                            window.location.href = '/MangaUpload/ManageManga';
+                        }, 1000);
+                    },
+                    error: function (xhr) {
+                        // Show error message
+                        $('button[type="submit"]').prop('disabled', false).text('Tạo truyện');
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            showToast(xhr.responseJSON.message, 'error');
+                        } else {
+                            showToast('Đã xảy ra lỗi khi tạo truyện. Vui lòng thử lại.', 'error');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

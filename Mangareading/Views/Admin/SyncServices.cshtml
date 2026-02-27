@@ -1,0 +1,101 @@
+﻿@{
+    ViewData["Title"] = "Đồng Bộ Truyện";
+    Layout = "_AdminLayout";
+}
+
+<div class="sync-services-container">
+    <div class="mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Đồng Bộ Truyện</h1>
+        <p class="text-muted">Các dịch vụ đồng bộ và cập nhật truyện từ các nguồn</p>
+    </div>
+
+    <div class="row">
+        <!-- MangaDex Sync -->
+        <div class="col-lg-12 mb-4">
+            <div class="card">
+                <div class="card-header py-3 d-flex align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-sync-alt me-2"></i> Đồng Bộ Truyện Từ MangaDex
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6 class="font-weight-bold">Đồng Bộ Truyện Tiếng Việt từ MangaDex</h6>
+                        <p class="small text-muted">Lấy các truyện tiếng Việt được cập nhật gần đây nhất từ MangaDex, bao gồm thông tin cơ bản và các chapter.</p>
+
+                        <form method="post" action="/admin/sync-vietnamese-manga" id="syncMangaForm" class="admin-form">
+                            <div class="form-group mb-3">
+                                <label for="limit" class="form-label">Số lượng truyện:</label>
+                                <input type="number" id="limit" name="limit" class="form-control" value="10" min="1" max="500" style="max-width: 150px;">
+                                <div class="form-text">Giới hạn từ 1-500 truyện</div>
+                            </div>
+                            <div class="form-group mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="syncChapters" name="syncChapters" checked>
+                                    <label class="form-check-label" for="syncChapters">
+                                        Đồng bộ cả chapter
+                                    </label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sync-alt me-2"></i> Bắt Đầu Đồng Bộ
+                            </button>
+                        </form>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <div>
+                        <h6 class="font-weight-bold">Đồng Bộ Theo Thể Loại</h6>
+                        <p class="small text-muted">Lấy truyện dựa theo thể loại cụ thể từ MangaDex.</p>
+
+                        <form method="post" action="/admin/sync-manga-by-genre" class="admin-form">
+                            <div class="form-group mb-3">
+                                <label for="genre" class="form-label">Thể loại:</label>
+                                <select id="genre" name="genre" class="form-select" style="max-width: 300px;">
+                                    <option value="action">Hành động</option>
+                                    <option value="adventure">Phiêu lưu</option>
+                                    <option value="comedy">Hài hước</option>
+                                    <option value="drama">Drama</option>
+                                    <option value="fantasy">Thế giới giả tưởng</option>
+                                    <option value="horror">Kinh dị</option>
+                                    <option value="romance">Tình cảm</option>
+                                    <option value="sci-fi">Khoa học viễn tưởng</option>
+                                    <option value="slice-of-life">Đời thường</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="genreLimit" class="form-label">Số lượng truyện:</label>
+                                <input type="number" id="genreLimit" name="limit" class="form-control" value="10" min="1" max="100" style="max-width: 150px;">
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sync-alt me-2"></i> Đồng Bộ Theo Thể Loại
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#syncMangaForm').on('submit', function(e) {
+                const limit = parseInt($('#limit').val());
+                if (limit < 1 || limit > 500) {
+                    e.preventDefault();
+                    alert('Số lượng phải từ 1 đến 500 truyện.');
+                    return false;
+                }
+
+                // Disable button and show loading indicator
+                const submitBtn = $(this).find('button[type="submit"]');
+                submitBtn.prop('disabled', true);
+                submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i> Đang đồng bộ...');
+            });
+        });
+    </script>
+}

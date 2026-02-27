@@ -1,0 +1,15 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Yêu cầu không hợp lệ";
+
+    ViewBag.StatusCode = 400;
+    ViewBag.ErrorTitle = "400 - Yêu cầu không hợp lệ";
+    ViewBag.ErrorIcon = "fas fa-exclamation-triangle";
+    ViewBag.ErrorMessage = "Yêu cầu của bạn không hợp lệ!";
+    ViewBag.ErrorDescription = "Yêu cầu của bạn không thể được xử lý do cú pháp không chính xác hoặc thiếu thông tin. Vui lòng kiểm tra lại thông tin đã nhập và thử lại.";
+    ViewBag.ErrorImage = "/images/400.svg";
+    ViewBag.ErrorClass = "error-400";
+    ViewBag.AlertType = "warning";
+}
+
+@await Html.PartialAsync("_ErrorLayout", Model)

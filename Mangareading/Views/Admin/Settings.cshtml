@@ -1,0 +1,457 @@
+@{
+    ViewData["Title"] = "Cài Đặt Hệ Thống";
+    Layout = "_AdminLayout";
+}
+
+<div class="settings-container">
+    <div class="mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Quản Lý Logs Hệ Thống</h1>
+        <p class="text-muted">Xem và quản lý các logs của hệ thống Manga Reader</p>
+    </div>
+
+    <div class="card">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Logs Hệ Thống</h6>
+            <div class="d-flex">
+                <div class="me-2">
+                    <select class="form-select form-select-sm" id="logLevelFilter">
+                        <option value="all" selected>Tất cả loại</option>
+                        <option value="information">Thông tin</option>
+                        <option value="warning">Cảnh báo</option>
+                        <option value="error">Lỗi</option>
+                        <option value="debug">Gỡ lỗi</option>
+                        <option value="critical">Nghiêm trọng</option>
+                        <option value="trace">Trace</option>
+                    </select>
+                </div>
+
+                <button type="button" class="btn btn-sm btn-outline-primary me-1" id="copyAllLogs">
+                    <i class="fas fa-copy me-1"></i> Sao chép tất cả
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger ms-1" id="clearLogs">
+                    <i class="fas fa-trash me-1"></i> Xóa Logs
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-group mb-3">
+                <label for="logSettings" class="form-label">Cài Đặt Ghi Logs</label>
+                <div class="row">
+                    <div class="col-md-4">
+                        <select class="form-select" id="logLevel" name="logLevel">
+                            <option value="Error">Chỉ lỗi</option>
+                            <option value="Warning">Lỗi và cảnh báo</option>
+                            <option value="Information" selected>Chi tiết</option>
+                            <option value="Debug">Gỡ lỗi (chi tiết nhất)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="logToFile" name="logToFile" checked>
+                            <label class="form-check-label" for="logToFile">
+                                Ghi logs vào tệp
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-primary" id="saveLogSettings">
+                            <i class="fas fa-save me-1"></i> Lưu Cài Đặt
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="font-weight-bold m-0">Nội Dung Logs</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                        <label class="form-check-label" for="autoRefresh">
+                            Tự động làm mới (30s)
+                        </label>
+                    </div>
+                </div>
+                <div id="logsLoading" class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p>Đang tải logs hệ thống...</p>
+                </div>
+                <div class="logs-container bg-light p-3 rounded" style="max-height: 500px; overflow-y: auto; display: none;">
+                    <div id="logEntries" class="font-monospace">
+                        <!-- Log entries will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                Nhấn vào một dòng log để xem chi tiết. Sử dụng bộ lọc phía trên để chỉ hiển thị logs theo mức độ.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Detail Modal -->
+<div class="modal fade" id="logDetailModal" tabindex="-1" aria-labelledby="logDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="logDetailModalLabel">Chi Tiết Log</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Thời gian:</strong> <span id="logDetailTime"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Mức độ:</strong> <span id="logDetailLevel" class="badge"></span></p>
+                        </div>
+                    </div>
+                    <p><strong>Nguồn:</strong> <span id="logDetailSource"></span></p>
+                    <p><strong>Thông báo:</strong> <span id="logDetailMessage"></span></p>
+                </div>
+                <div id="logDetailException" class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto; display: none;">
+                    <h6>Chi tiết lỗi:</h6>
+                    <pre class="mb-0 text-danger font-monospace" id="logDetailExceptionText"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="copyLogDetail">
+                    <i class="fas fa-copy me-1"></i> Sao chép
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Biến lưu trữ dữ liệu log
+            let allLogs = [];
+            let refreshInterval;
+
+            // Tải log ban đầu
+            loadSystemLogs();
+
+            // Thiết lập tự động làm mới
+            setupAutoRefresh();
+
+            // Xử lý sự kiện khi thay đổi tùy chọn tự động làm mới
+            $('#autoRefresh').on('change', function() {
+                setupAutoRefresh();
+            });
+
+            // Xử lý sự kiện khi thay đổi bộ lọc log
+            $('#logLevelFilter').on('change', function() {
+                filterLogs($(this).val());
+            });
+
+
+
+            // Xử lý sự kiện khi click vào nút xóa log
+            $('#clearLogs').on('click', function() {
+                if (confirm('Bạn có chắc chắn muốn xóa tất cả logs hệ thống không?')) {
+                    clearLogs();
+                }
+            });
+
+            // Xử lý sự kiện khi click vào nút sao chép tất cả logs
+            $('#copyAllLogs').on('click', function() {
+                copyAllLogs();
+            });
+
+            // Xử lý sự kiện khi click vào nút lưu cài đặt log
+            $('#saveLogSettings').on('click', function() {
+                saveLogSettings();
+            });
+
+            // Xử lý sự kiện khi click vào nút sao chép chi tiết log
+            $('#copyLogDetail').on('click', function() {
+                copyLogDetail();
+            });
+
+            // Hàm thiết lập tự động làm mới
+            function setupAutoRefresh() {
+                clearInterval(refreshInterval);
+
+                if ($('#autoRefresh').is(':checked')) {
+                    refreshInterval = setInterval(function() {
+                        loadSystemLogs();
+                    }, 30000);  // Làm mới mỗi 30 giây
+                }
+            }
+
+            // Hàm tải log hệ thống
+            function loadSystemLogs() {
+                $('#logsLoading').show();
+                $('.logs-container').hide();
+
+                $.ajax({
+                    url: '/api/logs/recent',
+                    method: 'GET',
+                    success: function(data) {
+                        allLogs = data;
+                        displayLogs(data);
+                    },
+                    error: function(err) {
+                        console.error('Error loading logs:', err);
+                        createSampleLogs();
+                    },
+                    complete: function() {
+                        $('#logsLoading').hide();
+                        $('.logs-container').show();
+                    }
+                });
+            }
+
+            // Hàm tạo dữ liệu log mẫu (nếu API chưa được triển khai)
+            function createSampleLogs() {
+                const sampleLogs = [
+                    { id: "1", timestamp: new Date().toISOString(), level: "information", source: "System", message: "Hệ thống khởi động thành công", details: "Khởi động thành công tất cả các dịch vụ" },
+                    { id: "2", timestamp: new Date(Date.now() - 5*60000).toISOString(), level: "warning", source: "MangaDexService", message: "API rate limit đạt ngưỡng", details: "Rate limit: 5 requests/minute" },
+                    { id: "3", timestamp: new Date(Date.now() - 15*60000).toISOString(), level: "error", source: "DatabaseService", message: "Lỗi kết nối đến cơ sở dữ liệu", exception: "SqlException: Connection timeout" },
+                    { id: "4", timestamp: new Date(Date.now() - 30*60000).toISOString(), level: "information", source: "UserService", message: "Người dùng 'admin' đăng nhập thành công", details: "IP: 192.168.1.1" },
+                    { id: "5", timestamp: new Date(Date.now() - 60*60000).toISOString(), level: "information", source: "SyncService", message: "Đồng bộ dữ liệu thành công", details: "Đã đồng bộ 25 truyện mới" }
+                ];
+
+                allLogs = sampleLogs;
+                displayLogs(sampleLogs);
+            }
+
+            // Hàm hiển thị log
+            function displayLogs(logs) {
+                const $logEntries = $('#logEntries');
+                $logEntries.empty();
+
+                if (logs && logs.length > 0) {
+                    logs.forEach(function(log) {
+                        const timestamp = new Date(log.timestamp);
+                        const formattedTime = timestamp.toLocaleString('vi-VN');
+                        const levelClass = getLevelClass(log.level);
+
+                        const $logEntry = $(`
+                            <div class="log-entry mb-1 p-1 ${levelClass}" data-log-id="${log.id}" data-log-level="${log.level.toLowerCase()}">
+                                <span class="log-time text-muted">[${formattedTime}]</span>
+                                <span class="log-level badge ${getLevelBadgeClass(log.level)} mx-1">${log.level.toUpperCase()}</span>
+                                <span class="log-source">[${log.source}]</span>
+                                <span class="log-message ms-2">${log.message}</span>
+                            </div>
+                        `);
+
+                        $logEntry.on('click', function() {
+                            showLogDetail(log);
+                        });
+
+                        $logEntries.append($logEntry);
+                    });
+                } else {
+                    $logEntries.html('<div class="text-center text-muted py-3">Không có dữ liệu logs.</div>');
+                }
+
+                // Áp dụng bộ lọc hiện tại
+                filterLogs($('#logLevelFilter').val());
+            }
+
+            // Hàm lọc log theo mức độ
+            function filterLogs(level) {
+                if (level === 'all') {
+                    $('.log-entry').show();
+                } else {
+                    $('.log-entry').hide();
+                    $(`.log-entry[data-log-level="${level}"]`).show();
+                }
+            }
+
+            // Hàm hiển thị chi tiết log
+            function showLogDetail(log) {
+                const timestamp = new Date(log.timestamp);
+                const formattedTime = timestamp.toLocaleString('vi-VN');
+
+                $('#logDetailTime').text(formattedTime);
+                $('#logDetailLevel')
+                    .text(log.level.toUpperCase())
+                    .attr('class', `badge ${getLevelBadgeClass(log.level)}`);
+                $('#logDetailSource').text(log.source);
+                $('#logDetailMessage').text(log.message);
+
+                if (log.exception) {
+                    $('#logDetailException').show();
+                    $('#logDetailExceptionText').text(log.exception);
+                } else {
+                    $('#logDetailException').hide();
+                }
+
+                $('#logDetailModal').modal('show');
+            }
+
+            // Hàm sao chép chi tiết log
+            function copyLogDetail() {
+                const time = $('#logDetailTime').text();
+                const level = $('#logDetailLevel').text();
+                const source = $('#logDetailSource').text();
+                const message = $('#logDetailMessage').text();
+                const exception = $('#logDetailExceptionText').text();
+
+                let logText = `[${time}] [${level}] [${source}] ${message}`;
+                if (exception) {
+                    logText += `\n\nException:\n${exception}`;
+                }
+
+                navigator.clipboard.writeText(logText)
+                    .then(() => {
+                        // Tạo thông báo thành công
+                        const $copyBtn = $('#copyLogDetail');
+                        const originalHtml = $copyBtn.html();
+
+                        // Đổi nội dung nút thành thông báo thành công
+                        $copyBtn.html('<i class="fas fa-check me-1"></i> Đã sao chép!');
+                        $copyBtn.removeClass('btn-primary').addClass('btn-success');
+
+                        // Sau 2 giây, đổi lại nội dung nút ban đầu
+                        setTimeout(() => {
+                            $copyBtn.html(originalHtml);
+                            $copyBtn.removeClass('btn-success').addClass('btn-primary');
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Không thể sao chép: ', err);
+
+                        // Hiển thị thông báo lỗi
+                        const $copyBtn = $('#copyLogDetail');
+                        const originalHtml = $copyBtn.html();
+
+                        $copyBtn.html('<i class="fas fa-times me-1"></i> Lỗi sao chép!');
+                        $copyBtn.removeClass('btn-primary').addClass('btn-danger');
+
+                        setTimeout(() => {
+                            $copyBtn.html(originalHtml);
+                            $copyBtn.removeClass('btn-danger').addClass('btn-primary');
+                        }, 2000);
+                    });
+            }
+
+
+
+            // Hàm xóa tất cả log
+            function clearLogs() {
+                $.ajax({
+                    url: '/api/logs/clear',
+                    method: 'POST',
+                    success: function(response) {
+                        alert('Đã xóa tất cả logs hệ thống.');
+                        loadSystemLogs();
+                    },
+                    error: function(err) {
+                        console.error('Error clearing logs:', err);
+                        alert('Không thể xóa logs. Vui lòng thử lại sau.');
+
+                        // Giả lập xóa log nếu API chưa được triển khai
+                        allLogs = [];
+                        displayLogs([]);
+                    }
+                });
+            }
+
+            // Hàm lưu cài đặt log
+            function saveLogSettings() {
+                const logLevel = $('#logLevel').val();
+                const logToFile = $('#logToFile').is(':checked');
+
+                $.ajax({
+                    url: '/api/logs/settings',
+                    method: 'POST',
+                    data: {
+                        logLevel: logLevel,
+                        logToFile: logToFile
+                    },
+                    success: function(response) {
+                        alert('Đã lưu cài đặt logs hệ thống.');
+                    },
+                    error: function(err) {
+                        console.error('Error saving log settings:', err);
+                        alert('Đã lưu cài đặt logs (mô phỏng).');
+                    }
+                });
+            }
+
+            // Hàm lấy class CSS cho mức độ log
+            function getLevelClass(level) {
+                level = level.toLowerCase();
+                if (level === 'error' || level === 'critical') return 'log-error';
+                if (level === 'warning') return 'log-warning';
+                if (level === 'debug' || level === 'trace') return 'log-debug';
+                return 'log-info';
+            }
+
+            // Hàm lấy class badge cho mức độ log
+            function getLevelBadgeClass(level) {
+                level = level.toLowerCase();
+                if (level === 'error') return 'bg-danger';
+                if (level === 'critical') return 'bg-danger';
+                if (level === 'warning') return 'bg-warning';
+                if (level === 'debug') return 'bg-secondary';
+                if (level === 'trace') return 'bg-secondary';
+                return 'bg-info';
+            }
+        });
+    </script>
+
+    <style>
+        .log-entry {
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            color: var(--text-color);
+        }
+
+        .log-entry:hover {
+            background-color: var(--bg-color-hover);
+        }
+
+        .log-error {
+            border-left: 3px solid var(--danger-color);
+        }
+
+        .log-warning {
+            border-left: 3px solid var(--warning-color);
+        }
+
+        .log-info {
+            border-left: 3px solid var(--info-color);
+        }
+
+        .log-debug {
+            border-left: 3px solid var(--text-muted);
+        }
+
+        .log-time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .log-source {
+            color: var(--primary-color);
+        }
+
+        .logs-container {
+            background-color: var(--card-bg) !important;
+            border: 1px solid var(--border-color);
+        }
+
+        #logDetailException {
+            background-color: var(--card-bg) !important;
+            border: 1px solid var(--border-color);
+        }
+
+        .text-gray-800 {
+            color: var(--text-color) !important;
+        }
+    </style>
+}

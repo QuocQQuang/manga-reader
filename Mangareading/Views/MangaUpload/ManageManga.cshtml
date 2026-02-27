@@ -1,0 +1,416 @@
+@model IEnumerable<Mangareading.Models.Manga>
+@{
+    ViewData["Title"] = "Quản lý truyện";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+        <a asp-action="CreateManga" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Tạo truyện mới
+        </a>
+    </div>
+
+    <div class="row" id="mangaList">
+        @if (Model.Any())
+        {
+            @foreach (var manga in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-img-top-wrapper" style="height: 250px; overflow: hidden;">
+                            <img src="@(string.IsNullOrEmpty(manga.CoverUrl) ? "/images/no-cover.png" : manga.CoverUrl)" 
+                                 class="card-img-top" 
+                                 alt="@manga.Title" 
+                                 style="object-fit: cover; height: 100%; width: 100%;" 
+                                 loading="lazy" 
+                                 onerror="this.onerror=null; this.src='/images/no-cover.png';">
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">@manga.Title</h5>
+                            <p class="card-text text-muted">
+                                <small>
+                                    <i class="fas fa-book"></i> @manga.ChapterCount chapter(s)
+                                    <br>
+                                    <i class="fas fa-eye"></i> @manga.ViewCount lượt xem
+                                    <br>
+                                    <i class="fas fa-calendar-alt"></i> Cập nhật: @manga.UpdatedAt.ToString("dd/MM/yyyy")
+                                </small>
+                            </p>
+                            <div class="btn-group w-100">
+                                <a asp-action="EditManga" asp-route-id="@manga.MangaId" class="btn btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Sửa
+                                </a>
+                                <button type="button" class="btn btn-outline-success" onclick="manageChapters(@manga.MangaId, '@manga.Title')">
+                                    <i class="fas fa-list"></i> Chapters
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" onclick="deleteManga(@manga.MangaId, '@manga.Title')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="alert alert-info">
+                    Bạn chưa có truyện nào. Hãy <a asp-action="CreateManga">tạo truyện mới</a> để bắt đầu.
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Manage Chapters Modal -->
+<div class="modal fade" id="chaptersModal" tabindex="-1" role="dialog" aria-labelledby="chaptersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="chaptersModalLabel">Quản lý chapter</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <button type="button" class="btn btn-success" id="addChapterBtn">
+                        <i class="fas fa-plus"></i> Thêm chapter mới
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped" id="chaptersTable">
+                        <thead>
+                            <tr>
+                                <th>Chapter</th>
+                                <th>Tiêu đề</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Chapters will be loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="noChaptersMessage" class="alert alert-info" style="display: none;">
+                    Truyện này chưa có chapter nào.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Chapter Modal -->
+<div class="modal fade" id="chapterFormModal" tabindex="-1" role="dialog" aria-labelledby="chapterFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="chapterFormModalLabel">Thêm chapter mới</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="chapterForm">
+                    <input type="hidden" id="chapterMangaId" name="MangaId" />
+                    <input type="hidden" id="chapterFormMode" value="add" />
+                    <input type="hidden" id="chapterId" value="" />
+
+                    <div class="form-group">
+                        <label for="chapterNumber">Số chapter</label>
+                        <input type="number" class="form-control" id="chapterNumber" name="ChapterNumber" step="0.1" min="0" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="chapterTitle">Tiêu đề (tùy chọn)</label>
+                        <input type="text" class="form-control" id="chapterTitle" name="Title" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="chapterLanguage">Ngôn ngữ</label>
+                        <select class="form-control" id="chapterLanguage" name="LanguageCode">
+                            <option value="vi">Tiếng Việt</option>
+                            <option value="en">Tiếng Anh</option>
+                            <option value="ja">Tiếng Nhật</option>
+                            <option value="zh">Tiếng Trung</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveChapter">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">Xác nhận xóa</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteConfirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Global variables
+        let currentMangaId = 0;
+        let currentChapterId = 0;
+        let deleteType = '';
+
+        $(document).ready(function () {
+            // Add chapter button
+            $('#addChapterBtn').on('click', function () {
+                $('#chapterFormMode').val('add');
+                $('#chapterFormModalLabel').text('Thêm chapter mới');
+                $('#chapterForm')[0].reset();
+                $('#chapterMangaId').val(currentMangaId);
+                $('#chapterId').val('');
+                $('#chapterFormModal').modal('show');
+            });
+
+            // Save chapter
+            $('#saveChapter').on('click', function () {
+                var formData = {
+                    MangaId: parseInt($('#chapterMangaId').val()),
+                    Title: $('#chapterTitle').val(),
+                    ChapterNumber: parseFloat($('#chapterNumber').val()),
+                    LanguageCode: $('#chapterLanguage').val()
+                };
+
+                var mode = $('#chapterFormMode').val();
+                var url = mode === 'add'
+                    ? '/api/manga-upload/' + formData.MangaId + '/chapter/create'
+                    : '/api/manga-upload/chapter/' + $('#chapterId').val() + '/info';
+                var method = mode === 'add' ? 'POST' : 'PUT';
+                var token = $('input[name="__RequestVerificationToken"]').val(); // Get token
+
+                $.ajax({
+                    url: url,
+                    type: method,
+                    data: JSON.stringify(formData),
+                    contentType: 'application/json',
+                    headers: { // Add token to headers
+                        'RequestVerificationToken': token
+                    },
+                    beforeSend: function () {
+                        $('#saveChapter').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                    },
+                    success: function (result) {
+                        $('#chapterFormModal').modal('hide');
+                        showToast(result.message, 'success');
+                        loadChapters(currentMangaId);
+                    },
+                    error: function (xhr) {
+                        $('#saveChapter').prop('disabled', false).text('Lưu');
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            showToast(xhr.responseJSON.message, 'error');   
+                        } else {
+                            showToast('Đã xảy ra lỗi khi lưu chapter. Vui lòng thử lại.', 'error');
+                        }
+                    }
+                });
+            });
+
+            // Confirm delete
+            $('#confirmDelete').on('click', function () {
+                if (deleteType === 'manga') {
+                    deleteMangaConfirmed(currentMangaId);
+                } else if (deleteType === 'chapter') {
+                    deleteChapterConfirmed(currentChapterId);
+                }
+            });
+        });
+
+        // Manage chapters
+        function manageChapters(mangaId, mangaTitle) {
+            currentMangaId = mangaId;
+            $('#chaptersModalLabel').text('Quản lý chapter - ' + mangaTitle);
+
+            loadChapters(mangaId);
+            $('#chaptersModal').modal('show');
+        }
+
+        // Load chapters
+        function loadChapters(mangaId) {
+            $.ajax({
+                url: '/api/manga-upload/' + mangaId + '/chapters',
+                type: 'GET',
+                success: function (chapters) {
+                    if (chapters.length > 0) {
+                        var html = '';
+
+                        // Sort chapters by number (descending)
+                        chapters.sort((a, b) => b.chapterNumber - a.chapterNumber);
+
+                        chapters.forEach(function (chapter) {
+                            html += `
+                                <tr>
+                                    <td>${chapter.chapterNumber}</td>
+                                    <td>${chapter.title || ''}</td>
+                                    <td>${new Date(chapter.uploadDate).toLocaleDateString()}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                             <a href="@Url.Action("ManagePages", "MangaUpload", new { /* chapterId will be replaced */ })/${chapter.chapterId}" class="btn btn-outline-info" title="Quản lý trang">
+                                                <i class="fas fa-images"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-primary" onclick="editChapter(${chapter.chapterId})" title="Sửa Chapter">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" onclick="deleteChapter(${chapter.chapterId})" title="Xóa Chapter">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+
+                        $('#chaptersTable tbody').html(html);
+                        $('#chaptersTable').show();
+                        $('#noChaptersMessage').hide();
+                    } else {
+                        $('#chaptersTable').hide();
+                        $('#noChaptersMessage').show();
+                    }
+                },
+                error: function () {
+                    showToast('Không thể tải danh sách chapter.', 'error');
+                }
+            });
+        }
+
+        // Edit chapter
+        function editChapter(chapterId) {
+            $.ajax({
+                url: '/api/chapter/' + chapterId,
+                type: 'GET',
+                success: function (chapter) {
+                    $('#chapterFormMode').val('edit');
+                    $('#chapterFormModalLabel').text('Chỉnh sửa chapter');
+                    $('#chapterMangaId').val(chapter.mangaId);
+                    $('#chapterId').val(chapter.chapterId);
+                    $('#chapterNumber').val(chapter.chapterNumber);
+                    $('#chapterTitle').val(chapter.title);
+                    $('#chapterLanguage').val(chapter.languageCode || 'vi');
+
+                    $('#chapterFormModal').modal('show');
+                },
+                error: function () {
+                    showToast('Không thể tải thông tin chapter.', 'error');
+                }
+            });
+        }
+
+        // Delete manga
+        function deleteManga(mangaId, mangaTitle) {
+            currentMangaId = mangaId;
+            deleteType = 'manga';
+            $('#deleteConfirmMessage').text(`Bạn có chắc chắn muốn xóa truyện "${mangaTitle}" không? Tất cả chapter và dữ liệu liên quan sẽ bị xóa vĩnh viễn.`);
+            $('#deleteConfirmModal').modal('show');
+        }
+
+        // Delete manga confirmed
+        function deleteMangaConfirmed(mangaId) {
+            var token = $('input[name="__RequestVerificationToken"]').val(); // Get token
+            $.ajax({
+                url: '/api/manga-upload/' + mangaId,
+                type: 'DELETE',
+                headers: { // Add token to headers
+                    'RequestVerificationToken': token
+                },
+                beforeSend: function () {
+                    $('#confirmDelete').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                },
+                success: function (result) {
+                    $('#deleteConfirmModal').modal('hide');
+                    showToast(result.message, 'success');
+                    setTimeout(function () {
+                        location.reload();
+                    }, 1000);
+                },
+                error: function (xhr) {
+                    $('#confirmDelete').prop('disabled', false).text('Xóa');
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        showToast(xhr.responseJSON.message, 'error');
+                    } else {
+                        showToast('Đã xảy ra lỗi khi xóa truyện. Vui lòng thử lại.', 'error');  
+                    }
+                }
+            });
+        }
+
+        // Delete chapter
+        function deleteChapter(chapterId) {
+            currentChapterId = chapterId;
+            deleteType = 'chapter';
+            $('#deleteConfirmMessage').text(`Bạn có chắc chắn muốn xóa chapter này không? Tất cả trang và dữ liệu liên quan sẽ bị xóa vĩnh viễn.`);
+            $('#deleteConfirmModal').modal('show');
+        }
+
+        // Delete chapter confirmed
+        function deleteChapterConfirmed(chapterId) {
+            var token = $('input[name="__RequestVerificationToken"]').val(); // Get token
+            $.ajax({
+                url: '/api/manga-upload/chapter/' + chapterId,
+                type: 'DELETE',
+                headers: { // Add token to headers
+                    'RequestVerificationToken': token
+                },
+                beforeSend: function () {
+                    $('#confirmDelete').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                },
+                success: function (result) {
+                    $('#deleteConfirmModal').modal('hide');
+                    showToast(result.message, 'success');
+                    loadChapters(currentMangaId);
+                },
+                error: function (xhr) {
+                    $('#confirmDelete').prop('disabled', false).text('Xóa');
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        showToast(xhr.responseJSON.message, 'error');   
+                    } else {
+                        showToast('Đã xảy ra lỗi khi xóa chapter. Vui lòng thử lại.', 'error');
+                    }
+                }
+            });
+        }
+
+        // Function to show toast messages (ensure this function exists in your site's JS)
+        function showToast(message, type = 'info') {
+            // Implement your toast notification logic here
+            // Example using a simple alert for now:
+            // alert(`[${type.toUpperCase()}] ${message}`);
+            console.log(`Toast (${type}): ${message}`);
+            // Replace with your actual toast library call, e.g., toastr[type](message);
+            if (typeof toastr !== 'undefined') {
+                toastr[type](message);
+            } else {
+                alert(`[${type.toUpperCase()}] ${message}`);
+            }
+        }
+    </script>
+}

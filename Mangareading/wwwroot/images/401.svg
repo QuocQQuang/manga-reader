@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Animation Definitions -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fffdf0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fffae6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background with subtle gradient -->
+  <rect width="600" height="400" fill="url(#bgGradient)" rx="15" ry="15" />
+  
+  <!-- Decorative elements -->
+  <g id="decorativeElements">
+    <!-- Key patterns -->
+    <path d="M50,50 c10,0 10,10 0,10 h-20" stroke="#E6C619" stroke-width="2" stroke-opacity="0.3" stroke-linecap="round" />
+    <path d="M550,350 c-10,0 -10,-10 0,-10 h20" stroke="#E6C619" stroke-width="2" stroke-opacity="0.3" stroke-linecap="round" />
+    <path d="M30,200 c10,0 10,10 0,10 h-20" stroke="#E6C619" stroke-width="2" stroke-opacity="0.3" stroke-linecap="round" />
+    <path d="M570,150 c-10,0 -10,-10 0,-10 h20" stroke="#E6C619" stroke-width="2" stroke-opacity="0.3" stroke-linecap="round" />
+    
+    <!-- Key tooth shapes -->
+    <g>
+      <path d="M520,80 v-10 h5 v10 h-5 z" fill="#E6C619" opacity="0.7">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" />
+      </path>
+      <path d="M80,320 v-10 h5 v10 h-5 z" fill="#E6C619" opacity="0.7">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite" />
+      </path>
+      <path d="M150,50 v-10 h5 v10 h-5 z" fill="#E6C619" opacity="0.7">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite" />
+      </path>
+    </g>
+  </g>
+  
+  <!-- 401 Text with shadows -->
+  <g id="errorText">
+    <text x="300" y="180" font-family="'Segoe UI', Roboto, Arial" font-size="130" font-weight="900" fill="#FFE97D" text-anchor="middle" letter-spacing="-2">401</text>
+    <text x="303" y="183" font-family="'Segoe UI', Roboto, Arial" font-size="130" font-weight="900" fill="#E6C619" text-anchor="middle" letter-spacing="-2">401</text>
+  </g>
+  
+  <!-- Animated lock with key -->
+  <g transform="translate(300, 240)">
+    <g>
+      <!-- Lock body -->
+      <rect x="-30" y="-10" width="60" height="50" rx="5" ry="5" fill="#FFFFFF" stroke="#E6C619" stroke-width="3" />
+      
+      <!-- Lock shackle -->
+      <path d="M-15,-10 C-15,-30 15,-30 15,-10" stroke="#E6C619" stroke-width="3" fill="none" />
+      
+      <!-- Keyhole -->
+      <circle cx="0" cy="15" r="10" fill="#FFF9CC" stroke="#E6C619" stroke-width="1.5" />
+      <rect x="-1" y="10" width="2" height="15" rx="1" ry="1" fill="#E6C619" />
+      
+      <!-- Key - positioned to look like it's being inserted -->
+      <g transform="translate(25, 15) rotate(90)">
+        <path d="M0,0 h30" stroke="#E6C619" stroke-width="2" />
+        <circle cx="40" cy="0" r="10" fill="#FFF9CC" stroke="#E6C619" stroke-width="2" />
+        <path d="M36,-4 v8 M44,-4 v8" stroke="#E6C619" stroke-width="2" />
+        
+        <animateTransform attributeName="transform" type="translate" additive="sum" values="0,0;-10,0;0,0" dur="3s" repeatCount="indefinite" />
+      </g>
+      
+      <animateTransform attributeName="transform" type="translate" values="0,-2;0,2;0,-2" dur="4s" repeatCount="indefinite" />
+    </g>
+  </g>
+  
+  <!-- Error message with better typography -->
+  <g id="errorMessage">
+    <rect x="150" y="305" width="300" height="40" rx="20" ry="20" fill="#E6C619" opacity="0.1" />
+    <text x="300" y="330" font-family="'Segoe UI', Roboto, Arial" font-size="20" font-weight="500" fill="#343A40" text-anchor="middle">Chưa đăng nhập</text>
+  </g>
+</svg>

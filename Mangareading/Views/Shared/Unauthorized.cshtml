@@ -1,0 +1,36 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Chưa đăng nhập";
+
+    ViewBag.StatusCode = 401;
+    ViewBag.ErrorTitle = "401 - Chưa đăng nhập";
+    ViewBag.ErrorIcon = "fas fa-lock";
+    ViewBag.ErrorMessage = "Bạn cần đăng nhập để truy cập trang này!";
+    ViewBag.ErrorDescription = "Trang bạn đang cố truy cập yêu cầu xác thực. Vui lòng đăng nhập để tiếp tục.";
+    ViewBag.ErrorImage = "/images/401.svg";
+    ViewBag.ErrorClass = "error-401";
+    ViewBag.AlertType = "warning";
+
+    var customButtons = "";
+    if (ViewBag.ReturnUrl != null)
+    {
+        customButtons = $@"<a href='/Account/Login?ReturnUrl={Uri.EscapeDataString(ViewBag.ReturnUrl)}' class='btn btn-primary error-btn error-btn-primary'>
+            <i class='fas fa-sign-in-alt me-2'></i> Đăng Nhập
+        </a>
+        <a href='/' class='btn btn-outline-secondary error-btn error-btn-secondary'>
+            <i class='fas fa-home me-2'></i> Về Trang Chủ
+        </a>";
+    }
+    else
+    {
+        customButtons = $@"<a href='/Account/Login' class='btn btn-primary error-btn error-btn-primary'>
+            <i class='fas fa-sign-in-alt me-2'></i> Đăng Nhập
+        </a>
+        <a href='/' class='btn btn-outline-secondary error-btn error-btn-secondary'>
+            <i class='fas fa-home me-2'></i> Về Trang Chủ
+        </a>";
+    }
+    ViewBag.CustomButtons = customButtons;
+}
+
+@await Html.PartialAsync("_ErrorLayout", Model)

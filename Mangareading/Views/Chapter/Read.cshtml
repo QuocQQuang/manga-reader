@@ -1,0 +1,353 @@
+@model List<Page>
+@{
+    var chapter = ViewBag.Chapter as Chapter;
+    var manga = ViewBag.Manga as Manga;
+    var prevChapter = ViewBag.PrevChapter as Chapter;
+    var nextChapter = ViewBag.NextChapter as Chapter;
+
+    // Format chapter number - show as integer if it's a whole number, decimal if it has decimal part
+    string FormatChapterNumber(decimal number) => number % 1 == 0 ? ((int)number).ToString() : number.ToString("0.0");
+
+    ViewData["Title"] = $"{manga.Title} - Chapter {FormatChapterNumber(chapter.ChapterNumber)}";
+    Layout = "_ReadingLayout";
+
+    // Cập nhật ngày giờ và tên người dùng
+    var currentDateTime = DateTime.Now; // Thông tin từ request
+    var currentUserLogin = User.Identity?.Name ?? "Anon"; // Thông tin từ request
+}
+
+<input type="hidden" id="chapterId" value="@chapter.ChapterId" />
+<input type="hidden" id="mangaId" value="@manga.MangaId" />
+<input type="hidden" id="isLoggedIn" value="@(User.Identity?.IsAuthenticated == true ? "true" : "false")" />
+
+<!-- Top navigation bar with reading controls -->
+<header class="reading-header" id="readingHeader">
+    <div class="container">
+        <div class="reading-controls">
+            <!-- Left side: Manga title -->
+            <div class="reading-controls-left">
+                <a href="/manga/@manga.MangaId" class="reading-controls-title-link">
+                    <h4 class="reading-controls-title">@manga.Title - Chapter @FormatChapterNumber(chapter.ChapterNumber)</h4>
+                </a>
+            </div>
+            
+            <!-- Right side: Reading controls -->
+            <div class="reading-controls-right">
+                <a href="/chapter/list/@manga.MangaId" class="btn btn-sm btn-reading-outline me-2" title="Danh sách chapter">
+                    <i class="fas fa-list"></i>
+                </a>
+                
+                <div class="d-inline-block me-2">
+                    <button id="scrollToTopBtn" class="btn btn-sm btn-reading-outline me-1" title="Lên đầu trang">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+
+                    <button id="scrollToBottomBtn" class="btn btn-sm btn-reading-outline" title="Xuống cuối trang">
+                        <i class="fas fa-arrow-down"></i>
+                    </button>
+                </div>
+
+                <div class="d-inline-block">
+                    <button id="settingsToggle" class="btn btn-sm btn-reading-outline me-1" title="Cài đặt">
+                        <i class="fas fa-cog"></i>
+                    </button>
+
+                    <button id="themeToggleBtnTop" class="btn btn-sm btn-reading-outline theme-toggle-button" title="Chuyển đổi giao diện sáng/tối">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main content container -->
+<div class="reading-container">
+
+    <div class="reading-content">
+        @if (Model.Any())
+        {
+            <!-- Manga pages container - thêm container riêng cho phần manga -->
+            <div class="manga-pages-container">
+                @foreach (var page1 in Model.OrderBy(p => p.PageNumber))
+                {
+                    <div class="page-container">
+                        <img class="manga-page fit-width" src="@page1.ImageUrl" alt="Page @page1.PageNumber"
+                             loading="lazy" data-page="@page1.PageNumber"
+                             onerror="this.onerror=null; this.src='/images/image-error.png';" />
+                    </div>
+                }
+            </div>
+
+            <!-- Thêm điều khiển điều hướng trang cho chế độ đọc ngang -->
+            <div class="page-navigation-controls page-navigation-left" id="prevPageControl">
+                <div class="page-navigation-indicator">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+            </div>
+            <div class="page-navigation-controls page-navigation-right" id="nextPageControl">
+                <div class="page-navigation-indicator">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <div class="chapter-ending d-flex justify-content-center my-5">
+                <div class="d-flex flex-column align-items-center text-white">
+                    <p class="mb-2">Bạn đã đọc hết chapter @FormatChapterNumber(chapter.ChapterNumber)</p>
+
+                    <div class="d-flex gap-3">
+                        @if (prevChapter != null)
+                        {
+                            <a href="/chapter/read/@prevChapter.ChapterId" class="btn btn-reading">
+                                <i class="fas fa-chevron-left me-2"></i> Chapter @FormatChapterNumber(prevChapter.ChapterNumber)
+                            </a>
+                        }
+
+                        <a href="/chapter/list/@manga.MangaId" class="btn btn-reading-outline">
+                            <i class="fas fa-list me-2"></i> Danh sách chapter
+                        </a>
+
+                        @if (nextChapter != null)
+                        {
+                            <a href="/chapter/read/@nextChapter.ChapterId" class="btn btn-reading">
+                                Chapter @FormatChapterNumber(nextChapter.ChapterNumber) <i class="fas fa-chevron-right ms-2"></i>
+                            </a>
+                        }
+                    </div>
+
+                    <p class="small text-muted mt-4">
+                        Đọc bởi: @currentUserLogin | @currentDateTime
+                    </p>
+                </div>
+            </div>
+
+            <!-- Comment section -->
+            <div class="container my-5">
+                <div class="card text-white border-0" style="background-color: var(--card-bg);">
+                    <div class="card-header border-secondary" style="background-color: var(--card-bg);">
+                        <h5 class="mb-0"><i class="fas fa-comment-alt me-2"></i>Bình luận</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <div class="mb-3">
+                                <textarea class="form-control" id="chapterCommentText" rows="3" placeholder="Viết bình luận của bạn về chapter này..." style="background-color: var(--input-bg); color: var(--input-text); border-color: var(--border-color);"></textarea>
+                                <div class="text-end mt-2">
+                                    <button type="button" class="btn btn-primary" id="submitChapterComment" data-manga-id="@manga.MangaId" data-chapter-id="@chapter.ChapterId">Gửi bình luận</button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert" style="background-color: var(--bg-color-secondary); color: var(--text-color); border-color: var(--border-color);">
+                                <i class="fas fa-info-circle me-2"></i> Vui lòng <a href="/Account/Login" class="text-info">đăng nhập</a> để bình luận.
+                            </div>
+                        }
+
+                        <div id="chapterCommentsContainer" class="mt-4">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Đang tải bình luận...</p>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-3 d-none" id="loadMoreChapterComments">
+                            <button class="btn btn-outline-light btn-sm" data-page="2" data-chapter-id="@chapter.ChapterId">
+                                <i class="fas fa-sync me-2"></i> Xem thêm bình luận
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="container my-5 text-center">
+                <div class="alert py-5" style="background-color: var(--bg-color-secondary); color: var (--text-color); border-color: var(--border-color);">
+                    <h4><i class="fas fa-exclamation-triangle me-2"></i>Không có trang nào được tìm thấy!</h4>
+                    <p class="mb-4">Chapter này có thể chưa được đồng bộ hoặc đã bị xóa khỏi nguồn.</p>
+                    <div>
+                        <a href="/chapter/list/@manga.MangaId" class="btn btn-reading">
+                            <i class="fas fa-list me-2"></i> Quay lại danh sách chapter
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Bottom navigation bar with reading controls -->
+    <footer class="chapter-navigation-bottom" id="readingFooter">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <!-- Left side: Manga title and chapter info -->
+                <div class="d-flex align-items-center">
+                    <a href="/manga/details/@manga.MangaId" class="reading-controls-title-link">
+                        <h4 class="reading-title mb-0">@manga.Title - Chapter @FormatChapterNumber(chapter.ChapterNumber)</h4>
+                    </a>
+                </div>
+
+                <!-- Right side: Controls -->
+                <div class="reading-controls">
+                    <!-- Chapter navigation -->
+                    @if (prevChapter != null)
+                    {
+                        <a href="/chapter/read/@prevChapter.ChapterId" class="btn btn-sm btn-reading-outline prev-chapter-link">
+                            <i class="fas fa-chevron-left"></i> Chapter @FormatChapterNumber(prevChapter.ChapterNumber)
+                        </a>
+                    }
+
+                    <a href="/chapter/list/@manga.MangaId" class="btn btn-sm btn-reading-outline">
+                        <i class="fas fa-list"></i>
+                    </a>
+
+                    <!-- Settings and quick navigation -->
+                    <button id="settingsToggleBottom" class="btn btn-sm btn-reading-outline" title="Cài đặt">
+                        <i class="fas fa-cog"></i>
+                    </button>
+
+                    <button id="themeToggleBtnBottom" class="btn btn-sm btn-reading-outline theme-toggle-button" title="Chuyển đổi giao diện sáng/tối">
+                        <i class="fas fa-moon"></i>
+                    </button>
+
+                    @if (nextChapter != null)
+                    {
+                        <a href="/chapter/read/@nextChapter.ChapterId" class="btn btn-sm btn-reading-outline next-chapter-link">
+                            Chapter @FormatChapterNumber(nextChapter.ChapterNumber) <i class="fas fa-chevron-right"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</div>
+
+<!-- Reading Status Popup -->
+<div id="reading-status-popup" class="reading-status-popup">
+    <span id="currentPageNumber">Trang 1</span>
+    <span id="syncStatus" class="ms-2" title="Tiến trình được lưu cục bộ"><i class="fas fa-save"></i></span>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/comments.css" asp-append-version="true" />
+    <style>
+        /* Styles for the reading status popup */
+        .reading-status-popup {
+            position: fixed;
+            bottom: 60px; /* Adjust as needed */
+            right: 20px; /* Adjust as needed */
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black */
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px; /* Rounded corners */
+            font-size: 0.9em;
+            z-index: 1050; /* Ensure it's above most elements */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        /* Thêm CSS để quản lý manga-pages-container */
+        .manga-pages-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        /* Style cho chế độ đọc ngang - chỉ áp dụng cho container manga */
+        body.reading-mode-horizontal .manga-pages-container {
+            flex-direction: row;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            width: 100%;
+            min-height: calc(100vh - 130px);
+            align-items: center;
+        }
+
+        /* Đảm bảo các phần khác không bị ảnh hưởng */
+        body.reading-mode-horizontal .chapter-ending,
+        body.reading-mode-horizontal .container {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        /* Đảm bảo trang manga đang ở chế độ ngang hiển thị đúng */
+        body.reading-mode-horizontal .page-container {
+            flex: 0 0 auto;
+            scroll-snap-align: center;
+            height: calc(100vh - 130px);
+            margin: 0 5px;
+        }
+
+        body.reading-mode-horizontal .manga-page {
+            height: 100%;
+            width: auto;
+            max-height: calc(100vh - 130px);
+        }
+
+        .reading-status-popup .fa-save {
+            color: #a0a0a0; /* Default grey color */
+        }
+        .reading-status-popup .fa-save.syncing {
+            color: #ffc107; /* Yellow when syncing */
+            animation: spin 1s linear infinite;
+        }
+        .reading-status-popup .fa-save.synced {
+            color: #28a745; /* Green when synced */
+        }
+        .reading-status-popup .fa-save.error {
+            color: #dc3545; /* Red on error */
+        }
+
+        @@keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Remove the old progress bar style if it exists */
+        .reading-progress {
+           display: none; /* Hide the old element */
+        }
+        
+        /* Giúp chuyển đổi sang responsive tốt hơn */
+        @@media (max-width: 576px) {
+            .chapter-navigation-bottom .reading-controls {
+                gap: 0.3rem;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="/js/comments.js"></script>
+    <script>
+        // Initialize manga tracking
+        $(document).ready(function() {
+            const isAuthenticated = $('#isLoggedIn').val() === 'true';
+            const mangaId = $('#mangaId').val();
+            const chapterId = $('#chapterId').val();
+
+            // Initialize tracking module if it exists
+            if (typeof MangaTracking !== 'undefined') {
+                MangaTracking.init(isAuthenticated);
+            }
+
+            // Set up chapter-specific variables for comments.js
+            window.currentChapterId = chapterId;
+            window.currentMangaId = mangaId;
+
+            // Initialize comments
+            if (typeof initComments === 'function') {
+                initComments();
+            }
+        });
+
+    </script>
+}

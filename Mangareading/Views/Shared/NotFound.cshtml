@@ -1,0 +1,15 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Không tìm thấy trang";
+
+    ViewBag.StatusCode = 404;
+    ViewBag.ErrorTitle = "404 - Không tìm thấy trang";
+    ViewBag.ErrorIcon = "fas fa-exclamation-triangle";
+    ViewBag.ErrorMessage = "Trang bạn đang tìm kiếm không tồn tại!";
+    ViewBag.ErrorDescription = "Có thể trang đã bị xóa, đổi tên hoặc tạm thời không khả dụng. Vui lòng kiểm tra lại đường dẫn hoặc quay lại trang chủ.";
+    ViewBag.ErrorImage = "/images/404.svg";
+    ViewBag.ErrorClass = "error-404";
+    ViewBag.AlertType = "warning";
+}
+
+@await Html.PartialAsync("_ErrorLayout", Model)

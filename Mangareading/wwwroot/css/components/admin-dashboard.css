@@ -1,0 +1,147 @@
+/**
+ * Admin Dashboard Styles
+ * Styles for the admin dashboard components
+ */
+
+/* Text colors */
+.text-gray-800 {
+    color: var(--text-color) !important;
+}
+
+.text-gray-300 {
+    color: var(--text-muted) !important;
+}
+
+.text-gray-400 {
+    color: var(--text-muted) !important;
+}
+
+/* Card styles */
+.stat-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem var(--shadow-color);
+}
+
+.border-left-primary {
+    border-left: 0.25rem solid var(--primary-color) !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid var(--success-color) !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid var(--info-color) !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid var(--warning-color) !important;
+}
+
+/* Chart containers */
+.chart-container {
+    box-shadow: 0 0.15rem 1.75rem 0 var(--shadow-color);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.chart-area {
+    position: relative;
+    height: 20rem;
+}
+
+.chart-pie {
+    position: relative;
+    height: 15rem;
+}
+
+/* Log items */
+.logs-container {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-color);
+}
+
+.log-item {
+    transition: background-color 0.2s ease;
+    border: 1px solid var(--border-color);
+}
+
+.log-item:hover {
+    background-color: var(--bg-color-hover) !important;
+}
+
+.log-message {
+    color: var(--text-color);
+}
+
+.bg-light-danger {
+    background-color: var(--danger-color-light) !important;
+    color: var(--danger-color-dark);
+}
+
+.bg-light-warning {
+    background-color: var(--warning-color-light) !important;
+    color: var(--warning-color-dark);
+}
+
+.bg-light-info {
+    background-color: var(--info-color-light) !important;
+    color: var(--info-color-dark);
+}
+
+/* Dark mode specific overrides */
+[data-theme="dark"] .bg-light-danger {
+    color: var(--danger-color-light);
+}
+
+[data-theme="dark"] .bg-light-warning {
+    color: var(--warning-color-light);
+}
+
+[data-theme="dark"] .bg-light-info {
+    color: var(--info-color-light);
+}
+
+/* Data tables */
+.data-table {
+    box-shadow: 0 0.15rem 1.75rem 0 var(--shadow-color);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+/* Quick action buttons */
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+/* Font weights */
+.font-weight-bold {
+    font-weight: 700 !important;
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+}
+
+.dropdown-item {
+    color: var(--text-color);
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+    background-color: var(--bg-color-hover);
+    color: var(--text-color);
+}
+
+.dropdown-item.active {
+    background-color: var(--primary-color);
+    color: white;
+}

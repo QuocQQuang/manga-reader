@@ -1,0 +1,144 @@
+@model List<Mangareading.Models.ReadingHistory>
+@{
+    ViewData["Title"] = "Lịch sử đọc";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Lịch sử đọc truyện</h1>
+        @if (Model.Any())
+        {
+            <div>
+                <button id="clearAllHistory" class="btn btn-danger">
+                    <i class="fas fa-trash-alt me-2"></i> Xóa tất cả
+                </button>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <p>Bạn chưa có lịch sử đọc truyện nào.</p>
+            <p>Hãy bắt đầu đọc truyện để xem chúng ở đây!</p>
+            <a href="/" class="btn btn-primary">Khám phá truyện</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 manga-card">
+                        <div class="position-relative">
+                            <a href="@Url.Action("Details", "Manga", new { id = item.MangaId })">
+                                <img src="@(string.IsNullOrEmpty(item.Manga?.CoverUrl) ? "/images/no-cover.png" : item.Manga.CoverUrl)" 
+                                     class="card-img-top manga-cover" 
+                                     alt="@item.Manga?.Title" 
+                                     loading="lazy" 
+                                     onerror="this.onerror=null; this.src='/images/no-cover.png';">
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title text-truncate">@item.Manga?.Title</h5>
+                            <p class="card-text">
+                                <span class="fw-bold">Đã đọc:</span> Chapter @item.Chapter?.ChapterNumber
+                                @if (!string.IsNullOrEmpty(item.Chapter?.Title))
+                                {
+                                    <span>- @item.Chapter?.Title</span>
+                                }
+                            </p>
+                            <p class="card-text text-muted small">
+                                <i class="far fa-clock me-1"></i> @item.ReadAt.ToString("dd/MM/yyyy HH:mm")
+                            </p>
+                            <div class="d-flex gap-2 mt-3">
+                                <a href="/manga/@item.MangaId" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                    <i class="fas fa-info-circle me-1"></i> Chi tiết
+                                </a>
+                                <a href="/chapter/read/@item.ChapterId" class="btn btn-sm btn-primary flex-grow-1">
+                                    <i class="fas fa-book-open me-1"></i> Đọc tiếp
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .manga-cover {
+            height: 250px;
+            object-fit: cover;
+        }
+        
+        .manga-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .manga-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Xóa một mục trong lịch sử
+            $('.delete-history').click(function() {
+                const mangaId = $(this).data('manga-id');
+                const card = $(this).closest('.col-md-3');
+                
+                if (confirm('Bạn có chắc muốn xóa truyện này khỏi lịch sử?')) {
+                    $.ajax({
+                        url: `/api/MangaTracking/history/clear/${mangaId}`,
+                        type: 'DELETE',
+                        success: function(response) {
+                            // Hiệu ứng xoá card và kiểm tra nếu không còn history nào
+                            card.fadeOut(300, function() {
+                                $(this).remove();
+                                
+                                if ($('.manga-card').length === 0) {
+                                    location.reload(); // Tải lại trang để hiện thông báo "không có lịch sử"
+                                }
+                            });
+                            
+                            // Hiện thông báo
+                            showToast('Đã xóa khỏi lịch sử đọc', 'success');
+                        },
+                        error: function(error) {
+                            console.error('Lỗi khi xóa lịch sử:', error);
+                            showToast('Không thể xóa lịch sử đọc', 'danger');
+                        }
+                    });
+                }
+            });
+            
+            // Xóa tất cả lịch sử
+            $('#clearAllHistory').click(function() {
+                if (confirm('Bạn có chắc muốn xóa toàn bộ lịch sử đọc? Hành động này không thể hoàn tác.')) {
+                    $.ajax({
+                        url: '/api/MangaTracking/history/clear',
+                        type: 'DELETE',
+                        success: function(response) {
+                            location.reload(); // Tải lại trang
+                            showToast('Đã xóa toàn bộ lịch sử đọc', 'success');
+                        },
+                        error: function(error) {
+                            console.error('Lỗi khi xóa toàn bộ lịch sử:', error);
+                            showToast('Không thể xóa lịch sử đọc', 'danger');
+                        }
+                    });
+                }
+            });
+            
+            // Khởi tạo tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
+}

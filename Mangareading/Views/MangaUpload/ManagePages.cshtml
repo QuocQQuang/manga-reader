@@ -1,0 +1,813 @@
+@model IEnumerable<Mangareading.Models.Page>
+@{
+    ViewData["Title"] = "Tải Ảnh Chapter";
+    var chapter = ViewBag.Chapter as Mangareading.Models.Chapter;
+    var manga = ViewBag.Manga as Mangareading.Models.Manga;
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>@ViewData["Title"]</h2>
+            <p class="text-muted">
+                @if (manga != null)
+                {
+                    <a href="/Manga/Details/@manga.MangaId">@manga.Title</a> <span>&raquo;</span>
+                }
+                @if (chapter != null)
+                {
+                    <span>Chapter @chapter.ChapterNumber @(string.IsNullOrEmpty(chapter.Title) ? "" : $"- {chapter.Title}")</span>
+                }
+            </p>
+        </div>
+        <div>
+            <a asp-action="ManageManga" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column: Upload Area -->
+        <div class="col-md-5">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h5 class="mb-0">Tải lên trang</h5>
+                </div>
+                <div class="card-body">
+                    <div class="dropzone-container">
+                        <form id="dropzone" class="dropzone">
+                            @Html.AntiForgeryToken()
+                            <div class="fallback">
+                                <input name="file" type="file" multiple />
+                            </div>
+                            <div class="dz-message" data-dz-message>
+                                <span>Kéo thả file ảnh vào đây</span>
+                                <span class="note">(Chỉ chấp nhận file JPG, PNG, GIF. Tối đa 10MB mỗi file)</span>
+                            </div>
+                        </form>
+                        <div class="mt-3 text-center">
+                            <button type="button" id="manualFileSelect" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-upload"></i> Chọn file ảnh
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="auto-sort-option mt-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="autoSortPages" checked>
+                            <label class="form-check-label" for="autoSortPages">
+                                Tự động sắp xếp trang theo tên file
+                            </label>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            <i class="fas fa-info-circle"></i> Hệ thống sẽ tự động phát hiện số trang từ tên file (ví dụ: page01.jpg, 1.png, trang_1.jpg)
+                        </small>
+                    </div>
+
+                    <div class="upload-queue-info mt-3 d-none" id="uploadQueueInfo">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-spinner fa-spin me-2"></i> Đang tải lên</h6>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Đã tải: <span id="uploadedCount">0</span>/<span id="totalCount">0</span></span>
+                                <span>Đang chờ: <span id="queueCount">0</span></span>
+                            </div>
+                            <div class="progress mt-2">
+                                <div id="uploadProgress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="fas fa-info-circle"></i> Để tránh bị giới hạn tốc độ từ Imgur, hệ thống sẽ tải lên từng ảnh một với khoảng thời gian chờ giữa các lần tải.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="upload-instructions mt-4">
+                        <h6><i class="fas fa-info-circle"></i> Hướng dẫn tải lên</h6>
+                        <ul>
+                            <li>Tải lên nhiều file cùng lúc bằng cách kéo thả hoặc chọn file</li>
+                            <li>Bật tính năng <strong>Tự động sắp xếp</strong> để sắp xếp trang theo số trong tên file</li>
+                            <li>Bạn có thể sắp xếp lại thứ tự các trang bằng cách kéo thả ở cột bên phải</li>
+                            <li>Nhấn "Lưu thứ tự" để lưu lại thứ tự các trang</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Page Sorting -->
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Sắp xếp trang</h5>
+                    <div>
+                        <button id="saveOrderBtn" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Lưu thứ tự
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="pagesSortable" class="pages-vertical-list">
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var pageItem in Model.OrderBy(p => p.PageNumber))
+                            {
+                                <div class="sortable-item" data-url="@pageItem.ImageUrl">
+                                    <div class="page-card">
+                                        <div class="page-number">@pageItem.PageNumber</div>
+                                        <div class="drag-handle" title="Kéo để sắp xếp"><i class="fas fa-grip-lines"></i></div>
+                                        <div class="page-image-container">
+                                            <img src="@pageItem.ImageUrl" class="page-thumbnail" alt="Page @pageItem.PageNumber">
+                                        </div>
+                                        <div class="page-actions">
+                                            <button type="button" class="btn btn-sm btn-danger delete-page">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-info preview-page" data-url="@pageItem.ImageUrl">
+                                                <i class="fas fa-eye"></i> Xem
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <div id="noPages" class="alert alert-warning @(Model != null && Model.Any() ? "d-none" : "")">
+                        <i class="fas fa-exclamation-triangle"></i> Chưa có trang nào. Hãy tải lên ít nhất một trang.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Preview Modal -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imagePreviewModalLabel">Xem trước</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="previewImage" src="" class="img-fluid" alt="Preview">
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone.css">
+    <style>
+        .dropzone {
+            border: 2px dashed #0087F7;
+            border-radius: 5px;
+            background: #f8f9fa;
+            min-height: 150px;
+            padding: 20px;
+            cursor: pointer;
+        }
+
+        .dropzone .dz-message {
+            font-weight: 400;
+            text-align: center;
+            margin: 2em 0;
+        }
+
+        .dropzone .dz-message .note {
+            font-size: 0.8em;
+            font-weight: 200;
+            display: block;
+            margin-top: 1.4rem;
+        }
+
+        .dropzone .dz-preview {
+            margin: 10px;
+        }
+
+        .dropzone .dz-preview .dz-image {
+            border-radius: 5px;
+            overflow: hidden;
+            width: 120px;
+            height: 120px;
+            position: relative;
+            display: block;
+            z-index: 10;
+        }
+
+        .dropzone .dz-preview .dz-progress {
+            display: block;
+            height: 10px;
+            border: 1px solid #0087F7;
+            border-radius: 10px;
+        }
+
+        .dropzone .dz-preview .dz-progress .dz-upload {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: #0087F7;
+            border-radius: 10px;
+        }
+
+        /* Vertical Pages List */
+        .pages-vertical-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 800px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        /* Sortable Item */
+        .sortable-item {
+            cursor: move;
+            transition: transform 0.2s ease;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .sortable-item:hover {
+            z-index: 10;
+            transform: translateX(5px);
+        }
+
+        /* Page Card */
+        .page-card {
+            display: flex;
+            align-items: center;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: var(--card-bg, #fff);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .page-card:hover {
+            border-color: var(--bs-primary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Page Number */
+        .page-number {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 8px;
+            font-size: 12px;
+            z-index: 1;
+            border-radius: 8px 0 8px 0;
+        }
+
+        /* Drag Handle */
+        .drag-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 8px;
+            font-size: 12px;
+            z-index: 1;
+            cursor: move;
+            border-radius: 0 8px 0 8px;
+        }
+
+        .drag-handle:hover {
+            background-color: rgba(0, 123, 255, 0.8);
+        }
+
+        .sortable-hint {
+            display: none;
+            font-size: 10px;
+            font-style: italic;
+        }
+
+        .drag-handle:hover .sortable-hint {
+            display: inline;
+        }
+
+        /* Page Image Container */
+        .page-image-container {
+            width: 120px;
+            height: 80px;
+            overflow: hidden;
+            border-radius: 4px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        /* Page Thumbnail */
+        .page-thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .page-thumbnail:hover {
+            transform: scale(1.1);
+        }
+
+        /* Page Actions */
+        .page-actions {
+            display: flex;
+            gap: 5px;
+            margin-left: auto;
+        }
+
+        /* Sortable Placeholder */
+        .sortable-placeholder {
+            border: 2px dashed #ccc;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            height: 100px;
+            margin-bottom: 10px;
+            visibility: visible !important;
+        }
+
+        /* Sortable Helper */
+        .ui-sortable-helper {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            background-color: var(--card-bg, #fff);
+            opacity: 0.9;
+        }
+
+        /* Dropzone Customization */
+        .dropzone {
+            min-height: 200px;
+            border: 3px dashed #0087F7;
+            background-color: rgba(0, 135, 247, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .dropzone:hover {
+            background-color: rgba(0, 135, 247, 0.1);
+        }
+
+        /* Upload Instructions */
+        .upload-instructions {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .upload-instructions ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+
+        /* Sticky Upload Card */
+        .sticky-top {
+            z-index: 100;
+        }
+    </style>
+}
+
+@section Scripts {
+
+    <script src="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone-min.js"></script>
+
+    <script>
+        /**
+         * ManagePages.js - JavaScript for the Manga Upload Page Management
+         * Handles file uploads, page sorting, and notifications
+         */
+
+        // Debug information
+        console.log("Dropzone version: " + (Dropzone.version || "unknown"));
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Initialize Dropzone
+            Dropzone.autoDiscover = false;
+
+            // Global variables for page management
+            let uploadedPages = [];
+            let autoSortEnabled = true; // Default to true since checkbox is checked by default
+
+            // Initialize uploadedPages with existing pages
+            function initializeExistingPages() {
+                $('#pagesSortable .sortable-item').each(function() {
+                    const url = $(this).data('url');
+                    // Extract filename from URL if possible, otherwise use a placeholder
+                    let filename = url.split('/').pop() || `page_${$(this).find('.page-number').text()}.jpg`;
+
+                    // Add data-filename attribute to existing items
+                    $(this).attr('data-filename', filename);
+
+                    // Add to uploadedPages array
+                    uploadedPages.push({
+                        imageUrl: url,
+                        originalFilename: filename
+                    });
+                });
+
+                // If auto-sort is enabled and we have pages, sort them
+                if (autoSortEnabled && uploadedPages.length > 0) {
+                    sortPagesByFilename();
+                }
+            }
+
+            // Function to extract page number from filename
+            function extractPageNumber(filename) {
+                // Remove file extension
+                const nameOnly = filename.replace(/\.[^/.]+$/, "");
+
+                // Try to find a number pattern in the filename
+                // This regex looks for one or more digits, possibly with leading zeros
+                const matches = nameOnly.match(/\d+/);
+
+                if (matches && matches.length > 0) {
+                    // Convert to number and return
+                    return parseInt(matches[0], 10);
+                }
+
+                // If no number found, return a very large number so it sorts to the end
+                return 9999;
+            }
+
+            // Function to sort pages by filename
+            function sortPagesByFilename() {
+                if (!autoSortEnabled || uploadedPages.length === 0) {
+                    return;
+                }
+
+                // Sort the uploadedPages array by the extracted page number
+                uploadedPages.sort((a, b) => {
+                    const numA = extractPageNumber(a.originalFilename);
+                    const numB = extractPageNumber(b.originalFilename);
+                    return numA - numB;
+                });
+
+                // Clear the current pages
+                $('#pagesSortable').empty();
+
+                // Add the sorted pages back to the DOM
+                uploadedPages.forEach((page, index) => {
+                    const newPage = `
+                        <div class="sortable-item" data-url="${page.imageUrl}" data-filename="${page.originalFilename}">
+                            <div class="page-card">
+                                <div class="page-number">${index + 1}</div>
+                                <div class="drag-handle" title="Kéo để sắp xếp"><i class="fas fa-grip-lines"></i></div>
+                                <div class="page-image-container">
+                                    <img src="${page.imageUrl}" class="page-thumbnail" alt="Page ${index + 1}">
+                                </div>
+                                <div class="page-actions">
+                                    <button type="button" class="btn btn-sm btn-danger delete-page">
+                                        <i class="fas fa-trash"></i> Xóa
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-info preview-page" data-url="${page.imageUrl}">
+                                        <i class="fas fa-eye"></i> Xem
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    $('#pagesSortable').append(newPage);
+                });
+
+                // Update page numbers
+                updatePageNumbers();
+            }
+
+            // Create a hidden file input for manual selection
+            var hiddenFileInput = document.createElement('input');
+            hiddenFileInput.type = 'file';
+            hiddenFileInput.multiple = true;
+            hiddenFileInput.accept = 'image/jpeg,image/png,image/gif';
+            hiddenFileInput.style.display = 'none';
+            document.body.appendChild(hiddenFileInput);
+
+            // Handle manual file selection button
+            $('#manualFileSelect').on('click', function() {
+                hiddenFileInput.click();
+            });
+
+            // Handle auto-sort checkbox
+            $('#autoSortPages').on('change', function() {
+                autoSortEnabled = $(this).is(':checked');
+
+                if (autoSortEnabled && uploadedPages.length > 0) {
+                    // Re-sort pages when auto-sort is enabled
+                    sortPagesByFilename();
+                    showToast('Trang đã được sắp xếp lại theo tên file', 'info');
+                }
+            });
+
+            // Handle file selection
+            hiddenFileInput.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    for (var i = 0; i < this.files.length; i++) {
+                        myDropzone.addFile(this.files[i]);
+                    }
+                }
+                // Reset the input to allow selecting the same file again
+                this.value = '';
+            });
+
+            var myDropzone = new Dropzone("#dropzone", {
+                url: "/api/manga-upload/chapter/@(chapter?.ChapterId ?? 0)/upload-page",
+                paramName: "file",
+                maxFilesize: 10, // MB
+                acceptedFiles: "image/jpeg,image/png,image/gif",
+                addRemoveLinks: true,
+                clickable: true,
+                createImageThumbnails: true,
+                dictRemoveFile: "Xóa",
+                dictCancelUpload: "Hủy",
+                dictDefaultMessage: "Kéo thả file ảnh vào đây",
+                headers: {
+                    'X-CSRF-TOKEN': $('input[name="__RequestVerificationToken"]').val()
+                },
+                // Limit parallel uploads to prevent rate limiting
+                parallelUploads: 1, // Upload one file at a time
+                uploadMultiple: false,
+                autoProcessQueue: true,
+                // Add a small delay between processing files
+                timeout: 120000, // 2 minutes timeout for each upload
+                init: function() {
+                    // Track upload counts
+                    let totalFiles = 0;
+                    let uploadedFiles = 0;
+                    let queuedFiles = 0;
+
+                    this.on("addedfiles", function(files) {
+                        // Update total count when files are added
+                        totalFiles += files.length;
+                        queuedFiles += files.length;
+
+                        // Show the queue info
+                        $('#uploadQueueInfo').removeClass('d-none');
+                        $('#totalCount').text(totalFiles);
+                        $('#queueCount').text(queuedFiles);
+
+                        // Reset progress if this is a new batch
+                        if (uploadedFiles === 0) {
+                            $('#uploadProgress').css('width', '0%').attr('aria-valuenow', 0).text('0%');
+                        }
+                    });
+
+                    this.on("addedfile", function(file) {
+                        console.log("File added: " + file.name);
+                    });
+
+                    this.on("sending", function(file, xhr, formData) {
+                        console.log("Sending file: " + file.name);
+                        // Update UI to show which file is being processed
+                        $('#uploadQueueInfo .alert-info h6').html(`<i class="fas fa-spinner fa-spin me-2"></i> Đang tải lên: ${file.name}`);
+                    });
+
+                    this.on("uploadprogress", function(file, progress) {
+                        // Update progress bar for current file
+                        const fileProgress = Math.round(progress);
+                        const overallProgress = Math.round((uploadedFiles / totalFiles * 100) + (fileProgress / totalFiles));
+                        $('#uploadProgress').css('width', overallProgress + '%').attr('aria-valuenow', overallProgress).text(overallProgress + '%');
+                    });
+
+                    // Add success handler directly in init to ensure it's properly bound
+                    this.on("success", function(file, response) {
+                        console.log("File uploaded successfully: " + file.name);
+
+                        // Update counters
+                        uploadedFiles++;
+                        queuedFiles--;
+                        $('#uploadedCount').text(uploadedFiles);
+                        $('#queueCount').text(queuedFiles);
+
+                        // Update progress
+                        const overallProgress = Math.round(uploadedFiles / totalFiles * 100);
+                        $('#uploadProgress').css('width', overallProgress + '%').attr('aria-valuenow', overallProgress).text(overallProgress + '%');
+
+                        // Hide the queue info if all files are uploaded
+                        if (uploadedFiles === totalFiles) {
+                            setTimeout(function() {
+                                $('#uploadQueueInfo').addClass('d-none');
+                                // Reset counters for next batch
+                                totalFiles = 0;
+                                uploadedFiles = 0;
+                                queuedFiles = 0;
+                            }, 2000);
+                        }
+
+                        // Add the uploaded page to our array
+                        uploadedPages.push({
+                            imageUrl: response.imageUrl,
+                            originalFilename: file.name
+                        });
+
+                        // If auto-sort is enabled, sort and redraw all pages
+                        if (autoSortEnabled) {
+                            sortPagesByFilename();
+                        } else {
+                            // Otherwise just append the new page
+                            var newPage = `
+                                <div class="sortable-item" data-url="${response.imageUrl}" data-filename="${file.name}">
+                                    <div class="page-card">
+                                        <div class="page-number">${$('#pagesSortable .sortable-item').length + 1}</div>
+                                        <div class="drag-handle" title="Kéo để sắp xếp"><i class="fas fa-grip-lines"></i></div>
+                                        <div class="page-image-container">
+                                            <img src="${response.imageUrl}" class="page-thumbnail" alt="New Page">
+                                        </div>
+                                        <div class="page-actions">
+                                            <button type="button" class="btn btn-sm btn-danger delete-page">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-info preview-page" data-url="${response.imageUrl}">
+                                                <i class="fas fa-eye"></i> Xem
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+
+                            $('#pagesSortable').append(newPage);
+                            updatePageNumbers();
+                        }
+
+                        // Hide "no pages" message if it's visible
+                        $('#noPages').addClass('d-none');
+
+                        // Mark the file as processed
+                        file.previewElement.classList.add("dz-success");
+
+                        // Show success message
+                        showToast('Tải lên thành công', 'success');
+                    });
+
+                    // Add error handler directly in init
+                    this.on("error", function(file, errorMessage) {
+                        console.log("Error uploading file: " + file.name);
+
+                        // Update counters
+                        queuedFiles--;
+                        $('#queueCount').text(queuedFiles);
+
+                        // Update UI to show error
+                        $('#uploadQueueInfo .alert-info').removeClass('alert-info').addClass('alert-danger');
+                        $('#uploadQueueInfo h6').html(`<i class="fas fa-exclamation-triangle me-2"></i> Lỗi khi tải lên: ${file.name}`);
+
+                        // If all files are processed (success or error), hide the queue info after a delay
+                        if (uploadedFiles + (totalFiles - queuedFiles - uploadedFiles) === totalFiles) {
+                            setTimeout(function() {
+                                $('#uploadQueueInfo').addClass('d-none');
+                                $('#uploadQueueInfo .alert-danger').removeClass('alert-danger').addClass('alert-info');
+                                // Reset counters for next batch
+                                totalFiles = 0;
+                                uploadedFiles = 0;
+                                queuedFiles = 0;
+                            }, 3000);
+                        }
+
+                        // Show error message
+                        var message = typeof errorMessage === 'string' ? errorMessage :
+                                     (errorMessage.message ? errorMessage.message : 'Lỗi khi tải lên file');
+
+                        // Show error message
+                        showToast(message, 'error');
+                    });
+
+                    // Handle queue complete
+                    this.on("queuecomplete", function() {
+                        console.log("All files processed");
+                        // Final update to progress bar
+                        const overallProgress = Math.round(uploadedFiles / totalFiles * 100);
+                        $('#uploadProgress').css('width', overallProgress + '%').attr('aria-valuenow', overallProgress).text(overallProgress + '%');
+                    });
+                }
+            });
+
+            // Note: Success and error handlers are now defined in the Dropzone init function
+
+            // Initialize sortable
+            setTimeout(function() {
+                try {
+                    $("#pagesSortable").sortable({
+                        placeholder: "sortable-placeholder",
+                        handle: ".drag-handle",
+                        cursor: "move",
+                        tolerance: "pointer",
+                        revert: true,
+                        opacity: 0.7,
+                        scroll: true,
+                        axis: "y",  // Restrict movement to vertical axis
+                        items: "> .sortable-item",
+                        containment: "parent",
+                        update: function(event, ui) {
+                            console.log('Sortable update event triggered');
+                            updatePageNumbers();
+
+                            // Update uploadedPages array to match the new order
+                            if (uploadedPages.length > 0) {
+                                const newOrder = [];
+                                $('#pagesSortable .sortable-item').each(function() {
+                                    const url = $(this).data('url');
+                                    const filename = $(this).data('filename');
+                                    const page = uploadedPages.find(p => p.imageUrl === url);
+                                    if (page) {
+                                        newOrder.push(page);
+                                    }
+                                });
+                                uploadedPages = newOrder;
+                            }
+                        }
+                    }).disableSelection();
+
+                    console.log('Sortable initialized successfully');
+
+                    // Add a visual indicator that items are sortable
+                    $('.drag-handle').append('<span class="sortable-hint"> (Kéo để sắp xếp)</span>');
+
+                    // Initialize existing pages
+                    initializeExistingPages();
+                } catch (e) {
+                    console.error('Error initializing sortable:', e);
+                }
+            }, 500); // Delay initialization to ensure DOM is fully loaded
+
+            // Update page numbers
+            function updatePageNumbers() {
+                $('#pagesSortable .sortable-item').each(function (index) {
+                    $(this).find('.page-number').text(index + 1);
+                });
+            }
+
+            // Delete page
+            $(document).on('click', '.delete-page', function () {
+                const $item = $(this).closest('.sortable-item');
+                const imageUrl = $item.data('url');
+
+                // Remove from uploadedPages array
+                uploadedPages = uploadedPages.filter(page => page.imageUrl !== imageUrl);
+
+                // Remove from DOM
+                $item.remove();
+                updatePageNumbers();
+
+                // Show "no pages" message if there are no pages
+                if ($('#pagesSortable .sortable-item').length === 0) {
+                    $('#noPages').removeClass('d-none');
+                }
+            });
+
+            // Preview image when clicking on thumbnail
+            $(document).on('click', '.page-thumbnail', function () {
+                var imageUrl = $(this).attr('src');
+                $('#previewImage').attr('src', imageUrl);
+                $('#imagePreviewModal').modal('show');
+            });
+
+            // Preview image when clicking on preview button
+            $(document).on('click', '.preview-page', function () {
+                var imageUrl = $(this).closest('.sortable-item').data('url');
+                $('#previewImage').attr('src', imageUrl);
+                $('#imagePreviewModal').modal('show');
+            });
+
+            // Save order
+            $('#saveOrderBtn').on('click', function () {
+                // Get all image URLs in order
+                var orderedUrls = [];
+                $('#pagesSortable .sortable-item').each(function () {
+                    orderedUrls.push($(this).data('url'));
+                });
+
+                if (orderedUrls.length === 0) {
+                    showToast('Không có trang nào để lưu.', 'warning');
+                    return;
+                }
+
+                // Save to server
+                $.ajax({
+                    url: '/api/manga-upload/chapter/@(chapter?.ChapterId ?? 0)/save-pages',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ orderedImageUrls: orderedUrls }),
+                    beforeSend: function () {
+                        $('#saveOrderBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang lưu...');
+                    },
+                    success: function (result) {
+                        showToast(result.message, 'success');
+                        $('#saveOrderBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Lưu thứ tự');
+                    },
+                    error: function (xhr) {
+                        $('#saveOrderBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Lưu thứ tự');
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            showToast(xhr.responseJSON.message, 'error');
+                        } else {
+                            showToast('Đã xảy ra lỗi khi lưu thứ tự trang. Vui lòng thử lại.', 'error');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,322 @@
+/*
+ * Custom Admin Layout Styles
+ * Additional styles for the modified admin layout
+ */
+
+/* Prevent horizontal scrollbar during sidebar transitions */
+html, body {
+    overflow-x: hidden; /* Prevent horizontal scrolling altogether */
+    max-width: 100%;
+}
+
+/* Handle transitions better */
+body {
+    position: relative; /* Needed for proper overflow handling */
+}
+
+/* Smooth transition for sidebar and content */
+.sidebar, .main-content {
+    transition: width 0.3s ease, margin 0.3s ease, left 0.3s ease;
+}
+
+/* Prevent animation jitter from scrollbar appearing/disappearing */
+.main-content {
+    overflow-x: clip; /* Modern browsers - clip overflow but don't add scrollbar */
+}
+
+/* Apply transition class during animation */
+.sidebar-transitioning {
+    margin-right: 0 !important; /* Prevent margin adjustments during transition */
+}
+
+/* User profile in sidebar header */
+.sidebar .user-profile {
+    display: flex;
+    align-items: center;
+}
+
+.sidebar .user-profile .dropdown-toggle::after {
+    margin-left: 0.5rem;
+}
+
+.sidebar .sidebar-toggle {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.25rem;
+    padding: 0.25rem;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.sidebar .sidebar-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.sidebar .sidebar-toggle:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.sidebar-collapsed .sidebar .sidebar-toggle i {
+    transform: rotate(180deg);
+}
+
+/* Collapsed sidebar adjustments */
+.sidebar-collapsed .sidebar .user-profile .user-name,
+.sidebar-collapsed .sidebar .user-profile .dropdown-toggle::after {
+    display: none;
+}
+
+.sidebar-collapsed .sidebar .user-profile {
+    justify-content: center;
+}
+
+/* Make sure the dropdown is still properly positioned */
+.sidebar-collapsed .sidebar .user-profile .dropdown-menu {
+    position: fixed;
+    margin-top: 10px;
+    margin-left: -100px;
+}
+
+/* Adjust padding in sidebar header for collapsed state */
+.sidebar-collapsed .sidebar-header {
+    padding: 0.5rem;
+}
+
+/* Make sure content area expands fully */
+.main-content {
+    width: 100%;
+}
+
+/* Media queries */
+@media (max-width: 992px) {
+    .sidebar .user-profile .user-name {
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* Sidebar styles with text labels */
+.sidebar {
+    width: 250px; /* Wider sidebar with text */
+    transition: width 0.3s ease;
+    will-change: width; /* Optimize for animation */
+}
+
+/* Collapsed sidebar */
+.sidebar-collapsed .sidebar {
+    width: 70px;
+}
+
+.sidebar .nav-link {
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    text-align: left;
+    transition: all 0.3s ease;
+}
+
+.sidebar-collapsed .sidebar .nav-link {
+    padding: 0.75rem 0;
+    justify-content: center;
+    text-align: center;
+}
+
+.sidebar .nav-link i {
+    transition: margin 0.3s ease;
+}
+
+.sidebar-collapsed .sidebar .nav-link i {
+    margin-right: 0 !important;
+    font-size: 1.25rem;
+}
+
+/* Hide text in collapsed sidebar */
+.sidebar-collapsed .nav-text {
+    display: none;
+}
+
+/* Adjust tooltips to show only in collapsed mode */
+.nav-tooltip {
+    display: none;
+}
+
+.sidebar-collapsed .nav-item .nav-tooltip {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--dark-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    margin-left: 10px;
+    z-index: 1000;
+}
+
+.sidebar-collapsed .nav-item:hover .nav-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Arrow for tooltip */
+.sidebar-collapsed .nav-item .nav-tooltip:before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 5px solid var(--dark-color);
+}
+
+/* Adjust home button */
+.sidebar-footer .btn-home {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+    justify-content: flex-start;
+}
+
+.sidebar-collapsed .sidebar-footer .btn-home {
+    justify-content: center;
+    padding: 0.375rem;
+}
+
+.sidebar-collapsed .sidebar-footer .btn-home .nav-text {
+    display: none;
+}
+
+.sidebar-footer .btn-home:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* Ensure theme toggle button looks like a nav item */
+#themeToggleBtn.nav-link {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.sidebar-collapsed #themeToggleBtn.nav-link {
+    justify-content: center;
+}
+
+#themeToggleBtn.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+#themeToggleBtn.nav-link:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+/* Main content margin */
+.main-content {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    will-change: margin-left, width; /* Optimize for animation */
+}
+
+.sidebar-collapsed .main-content {
+    margin-left: 70px;
+    width: calc(100% - 70px);
+}
+
+/* Media query for small screens */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: -250px;
+    }
+    
+    .sidebar-collapsed .sidebar {
+        left: -70px;
+    }
+    
+    body:not(.sidebar-collapsed) .sidebar {
+        left: 0;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    .sidebar-collapsed .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    /* Add overlay when sidebar is open on mobile */
+    body:not(.sidebar-collapsed)::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 99;
+    }
+}
+
+/* Add transition mask to prevent scrollbar flickering */
+.admin-container {
+    width: 100%;
+    position: relative;
+    overflow: hidden; /* This is crucial - prevents horizontal overflow */
+}
+
+/* During transition, ensure content doesn't cause scrollbars */
+.sidebar-transitioning .admin-container {
+    max-width: 100vw;
+}
+
+/* Improve consistency of transitions */
+.sidebar, 
+.sidebar .nav-link,
+.sidebar .nav-link i,
+.main-content,
+.nav-text {
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
+}
+
+/* Fix for mobile view */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+} 

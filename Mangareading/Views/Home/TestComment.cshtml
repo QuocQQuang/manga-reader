@@ -1,0 +1,85 @@
+@{
+    ViewData["Title"] = "Test Comment API";
+}
+
+<div class="container mt-5">
+    <h1>Test Comment API</h1>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Add Comment</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="mangaId" class="form-label">Manga ID</label>
+                <input type="number" class="form-control" id="mangaId" value="1">
+            </div>
+            <div class="mb-3">
+                <label for="chapterId" class="form-label">Chapter ID (optional)</label>
+                <input type="number" class="form-control" id="chapterId">
+            </div>
+            <div class="mb-3">
+                <label for="content" class="form-label">Comment Content</label>
+                <textarea class="form-control" id="content" rows="3"></textarea>
+            </div>
+            <button id="submitComment" class="btn btn-primary">Submit Comment</button>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <h5>Response</h5>
+        <pre id="response" class="bg-light p-3 rounded"></pre>
+    </div>
+
+    <div class="mt-4">
+        <h5>Request</h5>
+        <pre id="request" class="bg-light p-3 rounded"></pre>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#submitComment').click(function() {
+                const mangaId = parseInt($('#mangaId').val());
+                let chapterId = $('#chapterId').val();
+                const content = $('#content').val();
+
+                // Convert chapterId to number or null
+                chapterId = chapterId ? parseInt(chapterId) : null;
+
+                const comment = {
+                    MangaId: mangaId,
+                    ChapterId: chapterId,
+                    Content: content
+                };
+
+                // Display request
+                $('#request').text(JSON.stringify(comment, null, 2));
+
+                // Send request
+                $.ajax({
+                    url: '/api/Comment',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(comment),
+                    success: function(response) {
+                        $('#response').text(JSON.stringify(response, null, 2));
+                        $('#response').removeClass('text-danger').addClass('text-success');
+                    },
+                    error: function(xhr, status, error) {
+                        let responseText = xhr.responseText;
+                        try {
+                            responseText = JSON.stringify(JSON.parse(xhr.responseText), null, 2);
+                        } catch (e) {
+                            // Keep as is if not valid JSON
+                        }
+
+                        $('#response').text(`Error ${xhr.status}: ${error}\n\n${responseText}`);
+                        $('#response').removeClass('text-success').addClass('text-danger');
+                    }
+                });
+            });
+        });
+    </script>
+}
